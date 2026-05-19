@@ -1,127 +1,115 @@
+# CodeSentinel
 
-  # CodeSentinel: An Open-Source Privacy-Preserving Hybrid Framework for Static, Dynamic, and LLM-Based Secure Code Analysis
+CodeSentinel is a desktop security auditing platform for analyzing source code with a hybrid workflow that combines static analysis, sandboxed runtime checks, and local LLM-based review. The product is designed for local-first use so code can remain on the machine during analysis.
 
-  CodeSentinel is a desktop security auditing platform that combines:
-  - Static code analysis
-  - Sandboxed dynamic/runtime analysis
-  - Local LLM-based semantic security reasoning
+## Overview
 
-  All analysis is designed to run locally so source code does not need to leave the machine.
+CodeSentinel helps teams inspect code from multiple angles in one place:
 
-  ## Why This Project Matters
+- Static analysis for fast pattern-based vulnerability detection
+- Dynamic analysis for containerized runtime observation
+- AI-assisted review for semantic security reasoning and remediation guidance
 
-  Most tools focus on only one layer (static or dynamic). CodeSentinel integrates three complementary layers in one workflow:
-  - Static pass for fast pattern-based findings
-  - Dynamic pass in containers for runtime signals
-  - LLM pass for higher-level logic and architectural security issues
+The result is a single workflow for finding security issues, understanding their impact, and tracking remediation progress.
 
-  This supports both practical engineering audits and research-style evaluation.
+## Key Features
 
-  ## Core Stack
+- Repository onboarding and file discovery
+- Static analysis for common security issues and risky patterns
+- AI Architect review for file-level reasoning
+- Dynamic analysis and container insights
+- Risk scoring and reports
+- Persistent local project data in SQLite
+- Chat history and review context stored locally
 
-  - Desktop app: Electron + React + TypeScript
-  - Local AI inference: Ollama
-  - Persistence: SQLite
-  - Sandboxing/runtime checks: Docker
+## Technology Stack
 
-  ## High-Level Architecture
+- Electron
+- React
+- TypeScript
+- Ollama
+- Docker
+- SQLite
 
-  - Renderer process: UI and user workflow orchestration
-  - Preload bridge: secure IPC interface between UI and backend
-  - Main process: repository operations, AI calls, scan orchestration, persistence
-  - Docker runtime: isolated build/run telemetry
-  - Ollama runtime: local model inference for AI reviews
+## Architecture
 
-  ## Features Overview
+- Main process: repository operations, analysis orchestration, persistence, and AI calls
+- Preload bridge: secure IPC surface for renderer access
+- Renderer process: application UI, navigation, and analysis screens
+- Docker runtime: isolated execution and telemetry collection
+- Ollama runtime: local model inference for AI review
 
-  - Repository onboarding and file discovery
-  - Static analysis screen for fast vulnerability indicators
-  - AI Architect review for semantic reasoning over selected files
-  - Dynamic analysis and container insights
-  - Risk scoring and reporting views
-  - Persistent audit data and chat history in SQLite
+## Requirements
 
-  ## Local Setup (Reviewer Quick Start)
+- Node.js 20 or newer
+- npm 10 or newer
+- Docker Desktop or Docker Engine
+- Git
+- Ollama running locally with a supported model
 
-  ### 1. Prerequisites
+## Quick Start
 
-  Install the following on your machine:
-  - Node.js 20+
-  - npm 10+
-  - Docker Desktop (or Docker Engine)
-  - Git
+### 1. Clone the repository
 
-  ### 2. Clone and Install
+```bash
+git clone https://github.com/ali-Hamza817/CodeSentinel.git
+cd CodeSentinel
+```
 
-    git clone https://github.com/ali-Hamza817/CodeSentinel.git
-    cd CodeSentinel
-    npm install
+### 2. Install dependencies
 
-  ### 3. Start Ollama in Docker
+```bash
+npm install
+```
 
-    docker run -d --name codesentinel-ai -p 11434:11434 ollama/ollama
+### 3. Start Ollama
 
-  Pull a model (current app config uses llama3.2:latest):
+```bash
+docker run -d --name codesentinel-ai -p 11434:11434 ollama/ollama
+docker exec codesentinel-ai ollama pull llama3.2:latest
+```
 
-    docker exec codesentinel-ai ollama pull llama3.2:latest
+### 4. Run the application
 
-  ### 4. Run the App
+```bash
+npm run dev
+```
 
-    npm run dev
+## Usage
 
-  Electron should launch automatically.
+1. Open CodeSentinel.
+2. Add a repository or select a local project.
+3. Run static analysis to identify immediate findings.
+4. Open AI Architect to review specific files.
+5. Use dynamic analysis and container insights to validate runtime behavior.
+6. Review risk scores and generated reports.
 
-  ## Minimal Reproduction Protocol (5-10 Minutes)
+## Build
 
-  1. Open CodeSentinel and add a repository (or select a local project).
-  2. Go to AI Architect and select a code file.
-  3. Run Quick audit first, then Deep audit.
-  4. Open Static Analysis and compare findings.
-  5. Open Dynamic Analysis or Container Insights to view runtime behavior.
-  6. Verify risk score and reports update.
+```bash
+npm run build:win
+```
 
-  ## Expected Outputs
+Packaged artifacts are generated in the `release` directory.
 
-  - File-level findings with severity categories
-  - AI-generated recommendations for remediation
-  - Runtime and build telemetry from containerized execution
-  - Persisted project results in local SQLite storage
+## Project Structure
 
-  ## Project Structure
+- `src/main`: orchestration, AI service, execution service, repository service
+- `src/preload`: secure API bridge exposed to the renderer
+- `src/renderer`: React UI, routes, screens, and state management
+- `build` and `release`: packaging assets and build output
 
-  - src/main: orchestration, AI service, execution service, repository service
-  - src/preload: secure API bridge exposed to renderer
-  - src/renderer: React UI, routes, screens, state management
-  - build and release: packaging outputs
+## Troubleshooting
 
-  ## Build for Distribution (Windows)
+- If Ollama is not reachable on port 11434, verify Docker is running and the container is active.
+- If the model is missing, pull it again with `docker exec codesentinel-ai ollama pull llama3.2:latest`.
+- If AI responses time out, retry with a smaller file or confirm the model is available locally.
 
-    npm run build:win
+## License and Use
 
-  Packaged artifacts are generated under release.
+Copyright (c) 2026 Ali Hamza. All rights reserved.
 
-  ## Troubleshooting
+This repository is provided for non-commercial use only. Commercial use, redistribution for commercial purposes, or relicensing without permission is not allowed.
 
-  - Ollama model not found:
-
-      docker exec codesentinel-ai ollama pull llama3.2:latest
-
-  - Ollama not reachable on port 11434:
-
-      docker ps
-
-  - App starts but AI responses timeout:
-    - Verify Docker is running
-    - Verify the model is available
-    - Retry with a shorter query on first run
-
-  ## Reproducibility Notes
-
-  - Runs fully on local infrastructure (local Docker + local Ollama)
-  - No required cloud inference path
-  - Suitable for privacy-sensitive codebases and repeatable reviewer validation
-
-  ## License and Attribution
-
-  See ATTRIBUTIONS.md for third-party attributions.
+See [ATTRIBUTIONS.md](ATTRIBUTIONS.md) for third-party attributions.
 
