@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs-extra';
+import { app } from 'electron';
 
 export class ExecutionService {
   async runBuild(projectPath: string, onData: (data: string) => void): Promise<number> {
@@ -99,6 +100,158 @@ CMD ["npm", "start"]
             spawn('docker', ['rm', containerName], { shell: true }).on('close', resolve);
         });
     });
+  }
+
+  /**
+   * Builds and runs a Docker container for a SINGLE uploaded source file.
+   * Auto-generates a language-appropriate Dockerfile.
+   */
+  async dockerBuildSingleFile(
+    projectId: string,
+    sourceFilePath: string,
+    onData: (data: string) => void
+  ): Promise<{ runTime: number; containerName: string; previewPort: number }> {
+    const fileName   = path.basename(sourceFilePath);
+    const ext        = path.extname(fileName).toLowerCase();
+    const workDir    = path.join(app.getPath('userData'), 'singlefile-sandboxes', projectId);
+    await fs.ensureDir(workDir);
+    await fs.copy(sourceFilePath, path.join(workDir, fileName));
+
+    // ── Language-specific Dockerfile generation ──────────────────────────────
+    const dockerfileContent = this.generateSingleFileDockerfile(ext, fileName);
+    await fs.writeFile(path.join(workDir, 'Dockerfile'), dockerfileContent);
+    onData(`> Generated ${ext} Dockerfile for ${fileName}\n`);
+
+    const tag           = `codesentinel-single-${projectId}`.toLowerCase();
+    const containerName = `codesentinel-sf-${projectId}`;
+    const startTime     = Date.now();
+
+    // Build image
+    await new Promise<void>((resolve, reject) => {
+      const build = spawn('docker', ['build', '-t', tag, '.'], { cwd: workDir, shell: true });
+      build.stdout.on('data', d => onData(d.toString()));
+      build.stderr.on('data', d => onData(d.toString()));
+      build.on('close', code => code === 0 ? resolve() : reject(new Error(`Build failed: ${code}`))); 
+    });
+    onData(`> Image built in ${((Date.now() - startTime) / 1000).toFixed(2)}s\n`);
+
+    // Remove stale container
+    await new Promise<void>(r => spawn('docker', ['rm', '-f', containerName], { shell: true }).on('close', () => r()));
+
+    // Run with full port mapping
+    const ports = ['-p','3000:3000','-p','5000:5000','-p','5001:5001','-p','8000:8000','-p','8080:8080'];
+    const runTime = await new Promise<number>((resolve, reject) => {
+      const run = spawn('docker', ['run', '--name', containerName, ...ports, '-d', tag], { shell: true });
+      run.on('close', code => {
+        if (code === 0) { resolve(Date.now() - startTime); }
+        else reject(new Error(`Container run failed: ${code}`));
+      });
+    });
+    onData(`> Container running: ${containerName} (${(runTime / 1000).toFixed(2)}s)\n`);
+    return { runTime, containerName, previewPort: 5001 };
+  }
+
+  private generateSingleFileDockerfile(ext: string, fileName: string): string {
+    const name = path.basename(fileName, ext);
+    switch (ext) {
+      case '.py':
+        return [
+          'FROM python:3.11-slim',
+          'WORKDIR /app',
+          `COPY ${fileName} .`,
+          'RUN pip install flask requests numpy pandas 2>/dev/null || true',
+          `CMD ["python", "${fileName}"]`
+        ].join('\n');
+
+      case '.js':
+        return [
+          'FROM node:20-slim',
+          'WORKDIR /app',
+          `COPY ${fileName} .`,
+          `CMD ["node", "${fileName}"]`
+        ].join('\n');
+
+      case '.ts':
+        return [
+          'FROM node:20-slim',
+          'WORKDIR /app',
+          'RUN npm install -g tsx',
+          `COPY ${fileName} .`,
+          `CMD ["tsx", "${fileName}"]`
+        ].join('\n');
+
+      case '.java': {
+        const mainClass = name.replace(/[^a-zA-Z0-9_]/g, '');
+        return [
+          'FROM eclipse-temurin:21-jdk-slim',
+          'WORKDIR /app',
+          `COPY ${fileName} .`,
+          `RUN javac ${fileName}`,
+          `CMD ["java", "${mainClass}"]`
+        ].join('\n');
+      }
+
+      case '.cs':
+        return [
+          'FROM mcr.microsoft.com/dotnet/sdk:8.0',
+          'WORKDIR /app',
+          'RUN dotnet new console -n sandbox --force',
+          `COPY ${fileName} sandbox/Program.cs`,
+          'RUN dotnet build sandbox -c Release',
+          'CMD ["dotnet", "run", "--project", "sandbox"]'
+        ].join('\n');
+
+      case '.go':
+        return [
+          'FROM golang:1.22-alpine',
+          'WORKDIR /app',
+          `COPY ${fileName} .`,
+          `RUN go build -o out ${fileName}`,
+          'CMD ["./out"]'
+        ].join('\n');
+
+      case '.c':
+        return [
+          'FROM gcc:13',
+          'WORKDIR /app',
+          `COPY ${fileName} .`,
+          `RUN gcc -o out ${fileName}`,
+          'CMD ["./out"]'
+        ].join('\n');
+
+      case '.cpp':
+        return [
+          'FROM gcc:13',
+          'WORKDIR /app',
+          `COPY ${fileName} .`,
+          `RUN g++ -o out ${fileName}`,
+          'CMD ["./out"]'
+        ].join('\n');
+
+      case '.rb':
+        return [
+          'FROM ruby:3.3-slim',
+          'WORKDIR /app',
+          `COPY ${fileName} .`,
+          `CMD ["ruby", "${fileName}"]`
+        ].join('\n');
+
+      case '.php':
+        return [
+          'FROM php:8.3-cli',
+          'WORKDIR /app',
+          `COPY ${fileName} .`,
+          `CMD ["php", "${fileName}"]`
+        ].join('\n');
+
+      default:
+        return [
+          'FROM ubuntu:22.04',
+          'WORKDIR /app',
+          `COPY ${fileName} .`,
+          `CMD ["cat", "${fileName}"]`
+        ].join('\n');
+    }
   }
 
   async getDockerStats(projectId: string): Promise<any> {

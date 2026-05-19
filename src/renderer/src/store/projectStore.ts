@@ -46,17 +46,20 @@ export interface Project {
   }>;
   buildLogs?: string[];
   sandboxStatus?: 'stopped' | 'building' | 'running';
+  type: 'repo' | 'file';
+  fileExtension?: string;
 }
 
 interface ProjectState {
   projects: Project[];
-  activeProjectId: string | null;
+  activeProjectId: string | null,
   scanProgress: number;
   scanningFile: string | null;
   scanStartTime: number | null;
   estimatedRemainingSeconds: number | null;
   loadProjects: () => Promise<void>;
-  addProject: (project: Omit<Project, 'id' | 'status' | 'metrics' | 'findings'>) => Promise<void>;
+  addProject: (project: Omit<Project, 'id' | 'status' | 'metrics' | 'findings' | 'type'>) => Promise<void>;
+  uploadSingleFile: () => Promise<void>;
   updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
   getActiveProject: () => Project | null;
   reScanProject: (id: string) => Promise<void>;
@@ -103,13 +106,16 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
   addProject: async (newProject) => {
     const id = Math.random().toString(36).substring(7);
     const project: Project = {
-      ...newProject,
-      id,
-      status: 'idle',
-      lastScanned: 'Never',
-      metrics: { totalFiles: 0, vulnerabilities: 0, avgComplexity: 0, buildStatus: 'Pending' },
-      findings: [],
-      aiReviews: {}
+        ...newProject,
+        id,
+        status: 'idle',
+        sandboxStatus: 'stopped',
+        type: 'repo',
+        fileExtension: '',
+        lastScanned: 'Never',
+        metrics: { totalFiles: 0, vulnerabilities: 0, avgComplexity: 0, buildStatus: 'Pending' },
+        findings: [],
+        aiReviews: {}
     };
 
     // Add to UI immediately
@@ -174,6 +180,47 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
     }
   },
 
+  uploadSingleFile: async () => {
+    try {
+      const result = await (window as any).api.openFileDialog();
+      if (!result) return;
+
+      const { fileName, filePath, metrics, findings } = result;
+      const id = Math.random().toString(36).substring(7);
+      const storeFindings = mapFindings(findings);
+
+      const project: Project = {
+        id,
+        name: fileName,
+        url: 'Local File Audit',
+        path: filePath,
+        lastScanned: new Date().toLocaleString(),
+        status: 'completed',
+        sandboxStatus: 'stopped',
+        type: 'file',
+        fileExtension: fileName.split('.').pop() || '',
+        findings: storeFindings,
+        aiReviews: {},
+        metrics: {
+          ...metrics,
+          totalFiles: 1,
+          vulnerabilities: storeFindings.filter(f => f.severity === 'critical' || f.severity === 'high').length,
+          buildStatus: 'Passed'
+        }
+      };
+
+      set((state) => ({
+        projects: [...state.projects, project],
+        activeProjectId: id
+      }));
+
+      await (window as any).api.saveProject(project);
+
+    } catch (err) {
+      console.error('[Store] Single file upload failed:', err);
+    }
+  },
+
   reScanProject: async (id: string) => {
     const state = get();
     const project = state.projects.find(p => p.id === id);
@@ -228,20 +275,24 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
     if (!project) return;
 
     try {
-      set((state) => ({
-        projects: state.projects.map(p => p.id === id ? { ...p, sandboxStatus: 'building' } : p)
-      }));
+      // STEP 1: Build image
+      let buildTimeMs = 0;
+      let runResultRaw = '';
 
-      // Build image of the REPO (not CodeSentinel)
-      const buildTimeMs = await (window as any).api.dockerBuild(id, project.path);
+      if (project.type === 'file') {
+        const result = await (window as any).api.dockerBuildSingleFile(id, project.path);
+        buildTimeMs = result.runTime;
+        runResultRaw = JSON.stringify(result);
+      } else {
+        buildTimeMs = await (window as any).api.dockerBuild(id, project.path);
+        runResultRaw = await (window as any).api.dockerRun(id);
+      }
 
-      // Run the repo container
-      const runResultRaw = await (window as any).api.dockerRun(id);
       let startupTimeMs = 0;
       try {
         const parsed = JSON.parse(runResultRaw);
         startupTimeMs = parsed.runTime || 0;
-      } catch { /* may return plain containerName string on older builds */ }
+      } catch { /* ... */ }
 
       const updated: Project = {
         ...project,

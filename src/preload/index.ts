@@ -16,6 +16,10 @@ const api = {
   scanFile: (path: string) => ipcRenderer.invoke('scan-file', path),
   getAIReview: (code: string, file: string) => ipcRenderer.invoke('get-ai-review', code, file),
   chatWithArchitect: (messages: any[]) => ipcRenderer.invoke('chat-with-architect', messages),
+  saveChatMessage: (projectId: string, filePath: string, content: string, role: string) => 
+    ipcRenderer.invoke('save-chat-message', projectId, filePath, content, role),
+  getChatHistory: (projectId: string, filePath: string) => 
+    ipcRenderer.invoke('get-chat-history', projectId, filePath),
   
   // Execution & Docker
   runBuild: (path: string) => ipcRenderer.invoke('run-build', path),
@@ -24,6 +28,8 @@ const api = {
   dockerStop: (id: string) => ipcRenderer.invoke('docker-stop', id),
   dockerStats: (id: string) => ipcRenderer.invoke('docker-stats', id),
   ensureAIDocker: () => ipcRenderer.invoke('ensure-ai-container'),
+  openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
+  dockerBuildSingleFile: (id: string, filePath: string) => ipcRenderer.invoke('docker-build-single-file', { id, filePath }),
   onBuildLog: (callback: (data: string) => void) => ipcRenderer.on('build-log', (_, data) => callback(data)),
   onDockerLog: (callback: (data: string) => void) => ipcRenderer.on('docker-log', (_, data) => callback(data)),
   onAIChatChunk: (callback: (chunk: string) => void) => ipcRenderer.on('ai-chat-chunk', (_, chunk) => callback(chunk)),

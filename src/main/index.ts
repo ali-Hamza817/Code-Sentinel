@@ -1,5 +1,5 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { join, basename, dirname } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { exec } from 'child_process'
 import os from 'os'
@@ -81,14 +81,36 @@ function initDatabase() {
         metrics TEXT,
         findings TEXT,
         sandbox_status TEXT,
-        ai_reviews TEXT
+        ai_reviews TEXT,
+        type TEXT,
+        file_extension TEXT
       )
     `)
     // Safe migration for older DBs — ignore errors if columns already exist
-    const newCols = ['path TEXT', 'metrics TEXT', 'findings TEXT', 'sandbox_status TEXT', 'ai_reviews TEXT']
+    const newCols = [
+      'path TEXT',
+      'metrics TEXT',
+      'findings TEXT',
+      'sandbox_status TEXT',
+      'ai_reviews TEXT',
+      'type TEXT',
+      'file_extension TEXT'
+    ]
+    db.run(`CREATE TABLE IF NOT EXISTS chat_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, project_id TEXT, file_path TEXT, role TEXT, content TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)`)
+    db.run(`CREATE INDEX IF NOT EXISTS idx_chat_project_file ON chat_messages(project_id, file_path)`)
+    
     newCols.forEach(col => {
       db.run(`ALTER TABLE projects ADD COLUMN ${col}`, () => {/* ignore error if exists */})
     })
+ 
+    
+    // Chat persistence table
+    db.run(`CREATE TABLE IF NOT EXISTS chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id TEXT, file_path TEXT, role TEXT, content TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`)
+    db.run(`CREATE INDEX IF NOT EXISTS idx_chat_file ON chat_messages(project_id, file_path)`)
   })
 }
 
@@ -145,6 +167,8 @@ ipcMain.handle('get-projects', () => {
         lastScanned: row.last_scan || 'Never',
         status: row.status || 'idle',
         sandboxStatus: row.sandbox_status || 'stopped',
+        type: row.type || 'repo',
+        fileExtension: row.file_extension || '',
         metrics: row.metrics ? JSON.parse(row.metrics) : { totalFiles: 0, vulnerabilities: 0, avgComplexity: 0, buildStatus: 'Pending' },
         findings: row.findings ? JSON.parse(row.findings) : [],
         aiReviews: row.ai_reviews ? JSON.parse(row.ai_reviews) : {}
@@ -158,8 +182,8 @@ ipcMain.handle('save-project', (_, project) => {
   return new Promise((resolve, reject) => {
     const stmt = db.prepare(`
       INSERT OR REPLACE INTO projects
-        (id, name, url, path, last_scan, status, metrics, findings, sandbox_status, ai_reviews)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, name, url, path, last_scan, status, metrics, findings, sandbox_status, ai_reviews, type, file_extension)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     stmt.run(
       project.id,
@@ -172,6 +196,8 @@ ipcMain.handle('save-project', (_, project) => {
       JSON.stringify(project.findings || []),
       project.sandboxStatus || 'stopped',
       JSON.stringify(project.aiReviews || {}),
+      project.type || 'repo',
+      project.fileExtension || '',
       (err: any) => {
         if (err) reject(err)
         else resolve(true)
@@ -230,6 +256,27 @@ ipcMain.handle('chat-with-architect', async (event, messages) => {
   })
 })
 
+// Chat Persistence
+ipcMain.handle('save-chat-message', (_, projectId, filePath, content, role) => {
+  return new Promise((resolve, reject) => {
+    db.run(
+      'INSERT INTO chat_messages (project_id, file_path, role, content) VALUES (?, ?, ?, ?)',
+      [projectId, filePath, role, content],
+      (err) => { if (err) reject(err); else resolve(true); }
+    );
+  });
+});
+
+ipcMain.handle('get-chat-history', (_, projectId, filePath) => {
+  return new Promise((resolve, reject) => {
+    db.all(
+      'SELECT role, content FROM chat_messages WHERE project_id = ? AND file_path = ? ORDER BY id ASC LIMIT 100',
+      [projectId, filePath],
+      (err, rows) => { if (err) reject(err); else resolve(rows || []); }
+    );
+  });
+});
+
 // --- Execution & Docker Handlers ---
 
 ipcMain.handle('run-build', async (event, projectPath) => {
@@ -258,6 +305,40 @@ ipcMain.handle('docker-stats', async (_, id) => {
   return await executionService.getDockerStats(id)
 })
 
+// --- Single File Upload Handlers ---
+
+ipcMain.handle('open-file-dialog', async (event) => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select a Source Code File',
+    filters: [
+      { name: 'Source Code', extensions: ['py','js','ts','jsx','tsx','java','cs','go','c','cpp','rb','php','kt','swift','rs'] },
+      { name: 'All Files', extensions: ['*'] }
+    ],
+    properties: ['openFile']
+  })
+
+  if (result.canceled || result.filePaths.length === 0) return null
+
+  const filePath = result.filePaths[0]
+  const fileName = basename(filePath)
+  const content  = await fs.readFile(filePath, 'utf8')
+
+  // Run full static analysis on this single file
+  event.sender.send('docker-log', `> Analysing ${fileName}...\n`)
+  const { metrics, findings } = await repoService.analyzeProject(
+    dirname(filePath),
+    (p) => event.sender.send('analysis-progress', p)
+  )
+
+  return { fileName, filePath, content, metrics, findings }
+})
+
+ipcMain.handle('docker-build-single-file', async (event, { id, filePath }: { id: string; filePath: string }) => {
+  return await executionService.dockerBuildSingleFile(id, filePath, (data) => {
+    event.sender.send('docker-log', data)
+  })
+})
+
 app.whenReady().then(() => {
   // Set app user model id for windows
   if (process.platform === 'win32') {
@@ -281,3 +362,4 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+

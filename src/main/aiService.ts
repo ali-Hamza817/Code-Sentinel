@@ -15,9 +15,11 @@ export interface AIRendererResponse {
 }
 
 export class AIService {
-  private model: string = 'llama3.2';
+  private model: string = 'llama3.2:latest'; // Using available model
   private client: Ollama;
   private modelConfirmedReady: boolean = false;
+  private responseCache: Map<string, string> = new Map();
+  private requestTimeout: number = 60000; // 60 second timeout
 
   constructor() {
     this.client = new Ollama({ host: 'http://127.0.0.1:11434' });
@@ -28,7 +30,7 @@ export class AIService {
     try {
       const list = await this.client.list();
       const found = (list.models || []).some((m: any) =>
-        (m.name || '').includes('llama3.2')
+        (m.name || '').includes('llama3.2') || (m.name || '').includes('llama2')
       );
       if (found) {
         this.modelConfirmedReady = true;
@@ -39,11 +41,23 @@ export class AIService {
     }
   }
 
+  private getCacheKey(content: string, queryType: string): string {
+    const crypto = require('crypto');
+    const hash = crypto.createHash('md5').update(content + queryType).digest('hex');
+    return `${queryType}:${hash.slice(0, 16)}`;
+  }
+
+  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+    const timeoutPromise = new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout')), timeoutMs)
+    );
+    return Promise.race([promise, timeoutPromise]);
+  }
+
   private extractStructuredResponse(text: string): AIRendererResponse {
     let findings: AIReviewResult[] = [];
     let measures: string[] = [];
 
-    // 1. Try to find JSON block
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       try {
@@ -53,7 +67,6 @@ export class AIService {
       } catch {}
     }
 
-    // 2. Fallback: If it's just an array, those are findings
     if (findings.length === 0) {
       const arrayMatch = text.match(/\[[\s\S]*\]/);
       if (arrayMatch) {
@@ -64,12 +77,7 @@ export class AIService {
       }
     }
 
-    // 3. Last resort: If no findings, try to parse individual lines for lists
-    if (findings.length === 0 && measures.length === 0) {
-        // Just return empty if totally malformed
-    }
-
-    return { findings, measures: measures.slice(0, 5) }; // Caps measures at 5
+    return { findings, measures: measures.slice(0, 5) };
   }
 
   async getSecurityReview(code: string, fileName: string, onChunk?: (chunk: string) => void): Promise<AIRendererResponse> {
@@ -78,102 +86,135 @@ export class AIService {
 
     const ext = fileName.split('.').pop() || '';
     const lang = ext === 'cs' ? 'C#' : ext === 'py' ? 'Python' : 'JavaScript';
+    
+    const cacheKey = this.getCacheKey(code.slice(0, 2000), 'review');
+    if (this.responseCache.has(cacheKey)) {
+      console.log(`[Cache] Review for ${fileName}`);
+      return this.extractStructuredResponse(this.responseCache.get(cacheKey)!);
+    }
 
-    const prompt = `Perform a HIGH-INTENSITY security audit on this ${lang} code. File: "${fileName}"
+    const prompt = `Security review: ${lang} file ${fileName}
 
-You must return your response in TWO SECTIONS. 
-Section 1: Detailed Architectural Reasoning (Narrative explaining your thoughts).
-Section 2: The structured JSON findings.
-
-Structure:
-[[REASONING]]
-(Detailed expert narrative here)
-[[JSON]]
-{
-  "findings": [
-    {"file": "${fileName}", "line": 0, "snippet": "code", "issue": "vulnerability", "severity": "Critical|High|Medium|Low", "recommendation": "fix"}
-  ],
-  "measures": [
-    "One sentence security architecture recommendation for this file"
-  ]
-}
-
-Focus on: hardcoded secrets, unsafe API usage, input validation, logic flaws, and .NET security best practices.
 Code:
-${code.slice(0, 6000)}`;
+\`\`\`
+${code.slice(0, 2500)}
+\`\`\`
+
+JSON findings:`;
 
     try {
       let fullResponse = '';
-      const stream = await this.client.generate({
+      const generatePromise = this.client.generate({
         model: this.model,
         prompt,
         stream: true,
-        options: { temperature: 0.1, num_predict: 2500 }
+        options: { temperature: 0.3, num_predict: 400, num_thread: 4 }
       });
+
+      const stream = await this.withTimeout(generatePromise, 30000);
 
       for await (const chunk of stream) {
         fullResponse += chunk.response;
         if (onChunk) onChunk(chunk.response);
       }
 
-      // Extract JSON part for structural storage, everything else is reasoning
-      const jsonParts = fullResponse.split('[[JSON]]');
-      const narrative = jsonParts[0].replace('[[REASONING]]', '').trim();
-      const jsonContent = jsonParts[1] || '';
+      this.responseCache.set(cacheKey, fullResponse);
+      if (this.responseCache.size > 50) {
+        const key = this.responseCache.keys().next().value;
+        this.responseCache.delete(key);
+      }
 
-      const structured = this.extractStructuredResponse(jsonContent);
-      return {
-        findings: structured.findings,
-        measures: structured.measures,
-        // @ts-ignore
-        reasoning: narrative 
-      };
+      return this.extractStructuredResponse(fullResponse);
     } catch (error) {
-      console.error(`[AIService] Inference failed:`, error);
+      console.error(`Review failed:`, error);
       return { findings: [], measures: [] };
+    }
+  }
+
+  async quickReview(code: string, fileName: string): Promise<string> {
+    const ready = await this.isModelReady();
+    if (!ready) return "Ollama not running";
+
+    const cacheKey = this.getCacheKey(code.slice(0, 1000), 'quick-review');
+    if (this.responseCache.has(cacheKey)) {
+      console.log(`[Cache Hit] Quick review for ${fileName}`);
+      return this.responseCache.get(cacheKey)!;
+    }
+
+    const shortCode = code.substring(0, 1500);
+    const prompt = `Quick security scan of ${fileName}. List top 3 issues only:\n\n\`\`\`\n${shortCode}\n\`\`\`\n\nIssues:`;
+
+    try {
+      let fullResponse = '';
+      const generatePromise = this.client.generate({
+        model: this.model,
+        prompt,
+        stream: false,
+        options: { temperature: 0.2, num_predict: 200, num_thread: 4 }
+      });
+
+      const response = await this.withTimeout(generatePromise, 15000);
+      fullResponse = response.response;
+
+      this.responseCache.set(cacheKey, fullResponse);
+      if (this.responseCache.size > 50) {
+        const key = this.responseCache.keys().next().value;
+        this.responseCache.delete(key);
+      }
+
+      return fullResponse;
+    } catch (error) {
+      console.error(`Quick review failed:`, error);
+      return 'Timeout. Make sure Ollama is running.';
     }
   }
 
   async chatWithArchitect(messages: { role: string; content: string }[], onChunk?: (chunk: string) => void): Promise<string> {
     const ready = await this.isModelReady();
-    if (!ready) return "AI Service is not ready. Please ensure Ollama is running Llama 3.2.";
+    if (!ready) return "Ollama not running. Start with: docker run -d -p 11434:11434 ollama/ollama:latest";
 
-    const systemPrompt = {
+    const cacheKey = this.getCacheKey(JSON.stringify(messages.slice(-3)), 'chat');
+    if (this.responseCache.has(cacheKey)) {
+      const cached = this.responseCache.get(cacheKey)!;
+      if (onChunk) onChunk(cached);
+      return cached;
+    }
+
+    const systemMsg = {
       role: 'system',
-      content: `You are the CodeSentinel AI Security Architect.
-      When providing fixes, be specific to the lines of code provided. Use markdown formatting.`
+      content: 'Security expert. Short answers. Use code blocks for code.'
     };
 
     try {
-      const finalMessages = [systemPrompt, ...messages];
+      const recentMessages = messages.slice(-8);
+      const allMessages = [systemMsg, ...recentMessages];
       let fullText = '';
 
-      if (onChunk) {
-        const stream = await this.client.chat({
-          model: this.model,
-          messages: finalMessages,
-          stream: true,
-          options: { temperature: 0.7 }
-        });
+      const chatPromise = this.client.chat({
+        model: this.model,
+        messages: allMessages,
+        stream: true,
+        options: { temperature: 0.3, num_predict: 300, num_thread: 4 }
+      });
 
-        for await (const chunk of stream) {
-          const content = chunk.message.content;
-          fullText += content;
-          onChunk(content);
-        }
-        return fullText;
-      } else {
-        const response = await this.client.chat({
-          model: this.model,
-          messages: finalMessages,
-          stream: false,
-          options: { temperature: 0.7 }
-        });
-        return response.message.content;
+      const stream = await this.withTimeout(chatPromise, 20000);
+
+      for await (const chunk of stream) {
+        const content = chunk.message.content;
+        fullText += content;
+        if (onChunk) onChunk(content);
       }
+
+      this.responseCache.set(cacheKey, fullText);
+      if (this.responseCache.size > 50) {
+        const key = this.responseCache.keys().next().value;
+        this.responseCache.delete(key);
+      }
+
+      return fullText;
     } catch (error) {
-      console.error(`[AIService] Chat failed:`, error);
-      return "I encountered an error while processing your request.";
+      console.error(`Chat error:`, error);
+      return 'Timeout. Try: (1) shorter question (2) restart Ollama (3) check Docker running';
     }
   }
 }
