@@ -1,0 +1,145 @@
+\section{System Design and Methodology}
+\label{sec:method}
+
+\subsection{Design Goals}
+\cs\ was built around four goals. \textbf{(G1) No egress:} a complete
+audit must run with the network interface disabled. \textbf{(G2)
+Multi-modal:} pattern analysis, structural metrics, semantic (LLM) review,
+and dynamic execution should contribute to one result rather than living
+in separate tools. \textbf{(G3) Context-preserving triage:} every finding
+must be inspectable next to the exact source that produced it.
+\textbf{(G4) One number, honestly derived:} the platform should output a
+single interpretable health score whose computation is fully disclosed.
+
+\subsection{Architecture}
+\label{sec:arch}
+\input{figures/diagrams/fig-architecture}
+
+\cs\ is an Electron~\cite{electron} desktop application with a strict
+main/renderer split. \Cref{fig:architecture} shows the four layers, all
+resident on the developer's machine inside a no-egress boundary.
+
+\begin{itemize}
+  \item The \emph{presentation layer} is a React single-page application
+        of twelve coordinated screens (\cref{sec:interface}). It holds no
+        analysis logic; it issues typed requests over an
+        inter-process-communication (IPC) bridge and renders results.
+  \item The \emph{orchestration layer} (the Electron main process)
+        validates each request, enforces the offline policy, and routes
+        work to the services.
+  \item The \emph{service layer} contains four in-process modules: a
+        \textsc{RepoService} (checkout, file inventory, pattern
+        detection, complexity), an \textsc{AiService} (prompt assembly,
+        model I/O, finding extraction), an \textsc{ExecutionService}
+        (Dockerfile synthesis, image build, sandboxed run, telemetry),
+        and a \textsc{RiskModel} (fusion and scoring).
+  \item The \emph{local infrastructure layer} comprises an embedded
+        SQLite database for projects and findings, the host Docker
+        engine, and an Ollama container hosting the quantised
+        \mbox{Llama~3.2} weights~\cite{ollama,touvron2023llama2}.
+\end{itemize}
+
+\subsection{Analysis Pipeline}
+\label{sec:pipeline}
+\input{figures/diagrams/fig-pipeline}
+
+\Cref{fig:pipeline} shows the end-to-end pipeline. After a repository is
+registered, \cs\ walks the working tree, applies language filters, and
+produces a file inventory. Three analyses then run over that inventory;
+the first two are in-process and the third is delegated to the local
+model. \Cref{tab:modalities} maps each modality to the weakness
+categories it is responsible for.
+
+\input{sections/tables/tab-modalities}
+
+\subsubsection{Pattern-based detection}
+Each source file is scanned with a curated set of syntactic and
+lightweight semantic rules targeting high-severity, low-ambiguity
+classes: hard-coded secrets and high-entropy literals, command/SQL/prompt
+injection sinks, unsafe deserialisation (e.g.\ \texttt{pickle.load} on
+non-trusted input), server-side request forgery patterns, private-key
+material, and missing-authorisation markers on privileged routes. Rules
+carry a severity, a Common Weakness Enumeration
+identifier~\cite{mitrecwe} where applicable, and a suggested remediation.
+
+\subsubsection{Cyclomatic complexity engine}
+For every function, \cs\ computes McCabe cyclomatic complexity $CC$ from
+the control-flow graph~\cite{mccabe1976}, counts decision points, and
+records the functions whose $CC$ exceeds a configurable budget as
+\emph{structural hot-spots}. The mean complexity $\overline{CC}$ over all
+analysed functions feeds the composite score (\cref{sec:risk}).
+
+\subsubsection{On-device LLM semantic review}
+\label{sec:llm}
+The \textsc{AiService} sends each file (or, for large files, a bounded
+window) to the local \mbox{Llama~3.2} model through the Ollama HTTP
+endpoint on \texttt{127.0.0.1}. The prompt has three parts: a fixed
+system preamble that defines the reviewer role and refusal policy; the
+code under review, delimited so that its content cannot be interpreted as
+instructions; and a response schema requesting a JSON array of findings
+with \texttt{severity}, \texttt{title}, \texttt{line},
+\texttt{description}, and \texttt{suggestedFix} fields. Decoding uses a
+low temperature and a fixed seed so that repeated audits of an unchanged
+file are stable. The returned JSON is validated; malformed items are
+discarded; surviving items are tagged as model-originated.
+
+\subsubsection{Dynamic sandbox analysis}
+\label{sec:dynamic}
+The \textsc{ExecutionService} builds the project into a Docker
+image---synthesising a minimal Dockerfile when the repository lacks
+one---and runs the container under CPU and memory
+limits~\cite{merkel2014docker}. It records image build time, container
+start-up latency, and a two-second-interval stream of CPU and memory
+utilisation, plus a log of coarse behavioural events (file, socket, and
+process activity). Runtime figures are attached to the project and shown
+on the dynamic-analysis and container-insight screens.
+
+\subsection{Finding Fusion}
+\label{sec:fusion}
+Pattern findings and model findings are merged on the tuple
+$(\textit{file},\, \textit{normalised line},\, \textit{category})$.
+When both modalities report the same location and category, the entry is
+kept once and marked \emph{corroborated}; a model finding with no
+pattern counterpart is retained and marked \emph{model-only}; a pattern
+finding with no model counterpart is retained and marked
+\emph{pattern-only}. Severity is taken as the maximum of the two. The
+fused list is what every downstream screen and the report consume.
+
+\subsection{Composite Risk Model}
+\label{sec:risk}
+\input{figures/diagrams/fig-riskmodel}
+
+\cs\ reports one headline number, the \phindex\ $H \in [0,100]$, computed
+from three sub-scores, each also in $[0,100]$ and each disclosed to the
+user (\cref{fig:riskmodel}). Let $n_{\text{sev}}$ be the number of fused
+findings at \emph{critical} or \emph{high} severity, $\overline{CC}$ the
+mean cyclomatic complexity, and let the audit-completion flag be
+$a \in \{0,1\}$. Then
+\begin{align}
+  s_v &= \max\!\left(0,\; 100 - 10\, n_{\text{sev}}\right), \label{eq:sv}\\
+  s_c &= \max\!\left(0,\; 100 - 5\, \overline{CC}\right), \label{eq:sc}\\
+  s_q &= 95\,a + 50\,(1-a), \label{eq:sq}\\
+  H   &= \operatorname{round}\!\left(0.5\, s_v + 0.3\, s_c + 0.2\, s_q\right).
+        \label{eq:h}
+\end{align}
+The weights in \cref{eq:h} encode the platform's priorities: exploitable
+weaknesses dominate, structural debt is a secondary drag, and analysis
+completeness is a small confidence term. $H$ is mapped to three bands:
+\emph{low risk} for $H \ge 80$, \emph{moderate risk} for
+$50 \le H < 80$, and \emph{critical risk} for $H < 50$. The model is
+deliberately simple and transparent; \cref{sec:discussion} discusses
+calibration as future work.
+
+\subsection{Reporting}
+An audit can be exported as a paginated PDF---executive summary,
+structural hot-spot matrix, and a full finding ledger with severity,
+type, location, and identifier---or as machine-readable JSON for
+downstream tooling. Reports are written to local disk only.
+
+\subsection{Implementation}
+\cs\ is implemented in TypeScript on Electron~41 and React~18; charts use
+a declarative SVG library and all state is held in an in-process store
+backed by SQLite. Optional settings enforce offline mode, disable any
+external link handling, and enable encrypted local storage of results.
+The prototype is approximately 6\,KLOC of application code excluding
+generated UI primitives, and is publicly available~\cite{codesentinelrepo}.

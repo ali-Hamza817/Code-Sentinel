@@ -1,0 +1,76 @@
+\begin{figure*}[t]
+  \centering
+  \begin{tikzpicture}[
+      font=\footnotesize,
+      chip/.style={rounded corners=2.5pt, draw=csslate!45, fill=white,
+                   line width=0.5pt, minimum height=7mm, minimum width=30mm,
+                   align=center, font=\scriptsize, inner sep=3pt},
+      lyr/.style={font=\small\bfseries, color=csink, anchor=east,
+                  align=right, text width=24mm},
+      dn/.style={-{Stealth[length=2mm]}, draw=csslate!60, line width=0.8pt},
+    ]
+
+    % ---------- Presentation ----------
+    \node[chip] (p1) {React renderer};
+    \node[chip, right=4mm of p1] (p2) {12 coordinated screens};
+    \node[chip, right=4mm of p2] (p3) {offline status strip};
+    \node[lyr] at ([xshift=-6mm]p1.west) {Presentation};
+
+    % ---------- Orchestration ----------
+    \node[chip, below=10mm of p1] (o1) {Electron main};
+    \node[chip, right=4mm of o1] (o2) {typed IPC bridge};
+    \node[chip, right=4mm of o2] (o3) {offline policy};
+    \node[lyr] at ([xshift=-6mm]o1.west) {Orchestration};
+
+    % ---------- Services ----------
+    \node[chip, below=10mm of o1, minimum width=21mm] (s1) {RepoService};
+    \node[chip, right=3mm of s1, minimum width=21mm] (s2) {AiService};
+    \node[chip, right=3mm of s2, minimum width=27mm] (s3) {ExecutionService};
+    \node[chip, right=3mm of s3, minimum width=21mm] (s4) {RiskModel};
+    \node[lyr] at ([xshift=-6mm]s1.west) {Services};
+
+    % ---------- Local infrastructure ----------
+    \node[chip, below=10mm of s1] (i1) {SQLite store};
+    \node[chip, right=4mm of i1] (i2) {Docker engine};
+    \node[chip, right=4mm of i2, fill=csgreenbg, draw=csgreen!45] (i3)
+      {Ollama container \textbf{Llama 3.2}};
+    \node[lyr] at ([xshift=-6mm]i1.west) {Local infra.};
+
+    % ---------- layer backdrops ----------
+    \begin{scope}[on background layer]
+      \node[rounded corners=4pt, fill=csbluebg,  fit=(p1)(p3), inner sep=3mm] {};
+      \node[rounded corners=4pt, fill=csgraybg,  fit=(o1)(o3), inner sep=3mm] {};
+      \node[rounded corners=4pt, fill=csgraybg,  fit=(s1)(s4), inner sep=3mm] {};
+      \node[rounded corners=4pt, fill=csgreenbg, fit=(i1)(i3), inner sep=3mm] {};
+    \end{scope}
+
+    % ---------- flow ----------
+    \draw[dn] (p2.south) -- ++(0,-3mm);
+    \draw[dn] (o2.south) -- ++(0,-3mm);
+    \draw[dn] (s2.south) -- ++(0,-3mm);
+    \draw[{Stealth[length=2mm]}-{Stealth[length=2mm]}, draw=csslate!50,
+          line width=0.7pt]
+      ([xshift=-30mm,yshift=4mm]p1.west) -- ([xshift=-30mm,yshift=-4mm]i1.west)
+      node[midway, sloped, above, font=\scriptsize\itshape, color=csslate]
+      {request / result};
+
+    % ---------- no-egress boundary ----------
+    \begin{scope}[on background layer]
+      \node[draw=csslate!70, dashed, line width=0.9pt, rounded corners=6pt,
+            fit=(p1)(p3)(i1)(i3), inner sep=8mm] (box) {};
+    \end{scope}
+    \node[anchor=west, font=\scriptsize\bfseries, color=csslate,
+          fill=white, inner sep=2pt]
+      at (box.north west) {\,Local machine\ \ $\bullet$\ \ no network egress\,};
+    \node[anchor=east, font=\scriptsize, color=csred, fill=white, inner sep=2pt]
+      at (box.north east) {\,$\varnothing$ network\,};
+
+  \end{tikzpicture}
+  \caption{\cs\ architecture. Four in-machine layers inside a hard
+           no-egress boundary: a React presentation layer, an Electron
+           orchestration layer, four analysis services, and local
+           infrastructure hosting SQLite, the Docker engine, and the
+           quantised \mbox{Llama~3.2} model. No stage opens an outbound
+           connection.}
+  \label{fig:architecture}
+\end{figure*}

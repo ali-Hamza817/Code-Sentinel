@@ -1,0 +1,19 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We presented \cs, a local-first desktop platform that unifies
+pattern-based static analysis, an on-device \mbox{Llama~3.2} semantic
+review, containerised dynamic execution, and cyclomatic-complexity
+metrics into one privacy-preserving audit workflow, and folds their
+output into a single transparent \phindex. A worked case study on a
+representative retrieval-augmented-generation service showed the platform
+surfacing twenty findings---including prompt injection, unsafe
+deserialisation, server-side request forgery, and SQL injection---and
+five structural hot-spots, computing a moderate composite risk score, and
+completing in under a minute with no code leaving the machine. The
+contribution is not any single analysis technique but their co-location
+behind a coherent developer interface with a hard no-egress boundary. The
+main open problem is empirical: a controlled evaluation on labelled,
+real-world code is needed to quantify detection quality and to calibrate
+the scoring model. \cs\ is available as open
+source~\cite{codesentinelrepo}.

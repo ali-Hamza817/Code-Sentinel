@@ -1,0 +1,53 @@
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}[
+      font=\footnotesize,
+      inp/.style={rounded corners=2.5pt, draw=csslate!45, fill=csgraybg,
+                  line width=0.5pt, minimum height=7mm, minimum width=24mm,
+                  align=center, font=\scriptsize},
+      sub/.style={rounded corners=3pt, draw=csblue!45, fill=csbluebg,
+                  line width=0.6pt, minimum height=8mm, minimum width=24mm,
+                  align=center, font=\scriptsize},
+      fl/.style={-{Stealth[length=1.8mm]}, draw=csslate!60, line width=0.7pt},
+    ]
+
+    \node[inp] (nsev) at (0,1.1)  {$n_{\text{sev}}=6$};
+    \node[inp] (cc)   at (0,0)    {$\overline{CC}=7.8$};
+    \node[inp] (a)    at (0,-1.1) {$a=1$};
+
+    \node[sub] (sv) at (3.2,1.1)  {$s_v = 40$};
+    \node[sub] (sc) at (3.2,0)    {$s_c = 61$};
+    \node[sub] (sq) at (3.2,-1.1) {$s_q = 95$};
+
+    \node[rounded corners=3pt, draw=csslate!55, fill=white, line width=0.7pt,
+          minimum height=12mm, minimum width=20mm, align=center]
+          (sum) at (6.4,0) {$H=$\\$0.5s_v$\\$+\,0.3s_c$\\$+\,0.2s_q$};
+
+    \draw[fl] (nsev) -- (sv);  \draw[fl] (cc) -- (sc);  \draw[fl] (a) -- (sq);
+    \draw[fl] (sv.east) -- (sum.west);
+    \draw[fl] (sc.east) -- (sum.west);
+    \draw[fl] (sq.east) -- (sum.west);
+
+    % health-index band
+    \begin{scope}[shift={(-0.2,-2.65)}]
+      \fill[csredbg,   draw=csslate!30] (0,0)   rectangle (3.4,0.5);
+      \fill[csamberbg, draw=csslate!30] (3.4,0) rectangle (6.14,0.5);
+      \fill[csgreenbg, draw=csslate!30] (6.14,0) rectangle (6.9,0.5);
+      \node[font=\scriptsize, color=csred]   at (1.7,0.25)  {critical $<50$};
+      \node[font=\scriptsize, color=csamber] at (4.75,0.25) {moderate 50--79};
+      \node[font=\scriptsize, color=csgreen, anchor=west] at (7.0,0.25)
+        {low $\ge 80$};
+      % case-study marker at H = 57  ->  x = 57/100 * 6.9
+      \draw[csink, line width=0.9pt] (3.933,-0.15) -- (3.933,0.65);
+      \node[font=\scriptsize\bfseries, color=csink, anchor=south]
+        at (3.933,0.65) {$H = 57$};
+    \end{scope}
+    \draw[fl] (sum.south) |- (2.6,-2.4);
+
+  \end{tikzpicture}
+  \caption{Composite risk model. Three disclosed sub-scores
+           (\cref{eq:sv,eq:sc,eq:sq}) are combined by a fixed weighting
+           into the \phindex\ $H$ (\cref{eq:h}), which is mapped to three
+           bands. The marker shows the case-study result, $H=57$.}
+  \label{fig:riskmodel}
+\end{figure}

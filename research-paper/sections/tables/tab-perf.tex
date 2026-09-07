@@ -1,0 +1,19 @@
+\begin{table}[t]
+  \centering
+  \caption{Dynamic-pass measurements for the case study.}
+  \label{tab:perf}
+  \renewcommand{\arraystretch}{1.15}
+  \small
+  \begin{tabular}{@{}l l@{}}
+    \toprule
+    \textbf{Measurement} & \textbf{Value} \\
+    \midrule
+    Image build time            & 18.4\,s \\
+    Container cold-start latency & 0.94\,s \\
+    Steady-state resident memory & 241\,MiB / 628\,MiB limit \\
+    Steady-state CPU             & ${\sim}6\%$ \\
+    Outbound network requests    & 0 \\
+    End-to-end audit wall time   & $<60$\,s (commodity laptop) \\
+    \bottomrule
+  \end{tabular}
+\end{table}

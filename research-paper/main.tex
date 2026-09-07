@@ -1,0 +1,116 @@
+%% ============================================================================
+%%  CodeSentinel -- research paper (IEEE conference, two-column)
+%%  Build:  latexmk -pdf main.tex        (uses biber for the bibliography)
+%%  Overleaf: set "main.tex" as the main document, compiler = pdfLaTeX.
+%% ============================================================================
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% --- Encoding & fonts -------------------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+
+% --- Graphics, colour, maths, tables --------------------------------------
+\usepackage[dvipsnames]{xcolor}
+% Shared diagram palette (matches the product UI).
+\definecolor{csslate}{HTML}{475569}
+\definecolor{csink}{HTML}{0F172A}
+\definecolor{csblue}{HTML}{2563EB}
+\definecolor{csbluebg}{HTML}{EEF3FF}
+\definecolor{csgraybg}{HTML}{F1F5F9}
+\definecolor{csamber}{HTML}{D97706}
+\definecolor{csamberbg}{HTML}{FEF3E2}
+\definecolor{csgreen}{HTML}{059669}
+\definecolor{csgreenbg}{HTML}{E7F6EF}
+\definecolor{csred}{HTML}{DC2626}
+\definecolor{csredbg}{HTML}{FCEBEB}
+\usepackage{graphicx}
+\graphicspath{{figures/}{figures/screens/}{figures/diagrams/}}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{makecell}
+\usepackage{subcaption}
+\usepackage{balance}
+
+% --- Diagrams -------------------------------------------------------------
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,calc,fit,backgrounds,
+                decorations.pathreplacing}
+
+% --- Code / finding listings -------------------------------------------------
+\usepackage{listings}
+\definecolor{codebg}{HTML}{0B1220}
+\definecolor{codekw}{HTML}{7AA2F7}
+\definecolor{codestr}{HTML}{9ECE6A}
+\definecolor{codecmt}{HTML}{9AA5B1}
+\lstdefinestyle{finding}{
+  basicstyle=\ttfamily\scriptsize\color{white},
+  backgroundcolor=\color{codebg},
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecmt}\itshape,
+  breaklines=true, showstringspaces=false, columns=fullflexible,
+  frame=single, framesep=4pt, rulecolor=\color{codebg},
+  xleftmargin=4pt, xrightmargin=4pt, aboveskip=6pt, belowskip=4pt,
+  language=Python
+}
+
+% --- Bibliography: clickable, IEEE-style references ------------------------
+\usepackage[style=ieee,backend=biber,sorting=none,doi=true,url=true,isbn=false]{biblatex}
+\addbibresource{references.bib}
+
+% --- Hyperlinks: clickable citations, cross-references and URLs -----------
+\usepackage[colorlinks=true,
+            linkcolor=RoyalBlue,
+            citecolor=BrickRed,
+            urlcolor=Teal,
+            breaklinks=true,
+            bookmarksnumbered=true]{hyperref}
+\usepackage[capitalise,nameinlink]{cleveref}
+\crefname{table}{Table}{Tables}
+\crefname{figure}{Fig.}{Figs.}
+\Crefname{figure}{Figure}{Figures}
+\crefname{equation}{Eq.}{Eqs.}
+\crefname{section}{Section}{Sections}
+
+% --- Convenience macros ----------------------------------------------------
+\usepackage{xspace}
+\newcommand{\cs}{\textsc{CodeSentinel}\xspace}
+\newcommand{\phindex}{\textit{Project Health Index}\xspace}
+\newcommand{\vellum}{\textit{Vellum}\xspace}
+
+\begin{document}
+
+\title{\cs: A Local-First Platform for Large-Language-Model-Assisted\\
+Static and Dynamic Source-Code Security Auditing}
+
+\author{
+  \IEEEauthorblockN{Ali Hamza}
+  \IEEEauthorblockA{%
+    \textit{Department of Computer Science}\\
+    \textit{[Institution]}\\
+    [City, Country]\\
+    [author email]}
+}
+
+\maketitle
+
+\input{sections/abstract}
+
+\input{sections/introduction}
+\input{sections/related-work}
+\input{sections/methodology}
+\input{sections/interface}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/conclusion}
+\input{sections/declarations}
+
+\balance
+\printbibliography
+
+\end{document}

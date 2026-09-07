@@ -1,0 +1,54 @@
+\begin{figure*}[t]
+  \centering
+  \begin{tikzpicture}[
+      font=\footnotesize,
+      node distance=6mm,
+      stage/.style={rounded corners=3pt, draw=csslate!45, fill=csgraybg,
+                    line width=0.6pt, minimum height=9mm, minimum width=20mm,
+                    align=center, inner sep=4pt},
+      ana/.style={rounded corners=3pt, draw=csblue!45, fill=csbluebg,
+                  line width=0.6pt, minimum height=8mm, minimum width=30mm,
+                  align=center, inner sep=3pt, font=\scriptsize},
+      out/.style={rounded corners=3pt, draw=csgreen!50, fill=csgreenbg,
+                  line width=0.6pt, minimum height=9mm, minimum width=20mm,
+                  align=center, inner sep=4pt},
+      fl/.style={-{Stealth[length=2mm]}, draw=csslate!60, line width=0.8pt},
+    ]
+
+    \node[stage] (repo)  {Repository};
+    \node[stage, right=of repo] (inv) {File\\inventory};
+
+    % parallel analyses
+    \node[ana, right=14mm of inv, yshift=10mm]  (pat) {Pattern scan\\\scriptsize(rules, CWE)};
+    \node[ana, right=14mm of inv]               (cx)  {Complexity engine\\\scriptsize(McCabe $CC$)};
+    \node[ana, right=14mm of inv, yshift=-10mm] (llm) {LLM review\\\scriptsize(Llama 3.2, schema)};
+
+    \node[stage, right=14mm of cx] (fuse) {Finding\\fusion};
+    \node[stage, right=of fuse]    (dyn)  {Dynamic\\sandbox};
+    \node[stage, right=of dyn]     (risk) {Risk\\model};
+    \node[out,   right=of risk]    (rep)  {Report\\\scriptsize PDF / JSON};
+
+    \draw[fl] (repo) -- (inv);
+    \draw[fl] (inv.east) -- (pat.west);
+    \draw[fl] (inv.east) -- (cx.west);
+    \draw[fl] (inv.east) -- (llm.west);
+    \draw[fl] (pat.east) -- (fuse.west);
+    \draw[fl] (cx.east)  -- (fuse.west);
+    \draw[fl] (llm.east) -- (fuse.west);
+    \draw[fl] (fuse) -- (dyn);
+    \draw[fl] (dyn)  -- (risk);
+    \draw[fl] (risk) -- (rep);
+
+    \node[font=\scriptsize\itshape, color=csslate, above=1mm of pat] {in process};
+    \node[font=\scriptsize\itshape, color=csslate, below=1mm of llm]
+      {local container};
+
+  \end{tikzpicture}
+  \caption{The \cs\ analysis pipeline. A file inventory feeds three
+           parallel analyses---pattern scanning and complexity in
+           process, semantic review by the on-device model---whose
+           output is fused (\cref{sec:fusion}), augmented by a sandboxed
+           dynamic pass, and aggregated into the composite risk score and
+           the exported report.}
+  \label{fig:pipeline}
+\end{figure*}

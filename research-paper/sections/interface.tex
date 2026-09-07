@@ -1,0 +1,153 @@
+\section{Product Interface}
+\label{sec:interface}
+
+\cs\ is organised as a persistent left-hand navigation over twelve
+screens that share one visual system---a single accent colour, a common
+metric-tile and panel component, and an always-visible status strip that
+shows the Docker and local-model state. This section walks through the
+screens a developer meets during a full audit; all figures show the
+platform analysing the case-study project of \cref{sec:results}.
+
+\subsection{Initialisation}
+On launch, \cs\ runs a four-stage readiness check
+(\cref{fig:boot}): host resources, Docker runtime, provisioning of the
+local model container, and the model pull itself. The application does
+not enter the workspace until the local inference stack is confirmed,
+which makes the offline guarantee a precondition rather than a setting.
+
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}{0.485\columnwidth}
+    \includegraphics[width=\linewidth]{boot-1}
+    \caption{Hardware verification}
+  \end{subfigure}\hfill
+  \begin{subfigure}{0.485\columnwidth}
+    \includegraphics[width=\linewidth]{boot-3}
+    \caption{Model container pulse}
+  \end{subfigure}
+  \caption{Initialisation sequence. \cs\ confirms the local Docker and
+           \mbox{Llama~3.2} stack before opening the workspace.}
+  \label{fig:boot}
+\end{figure}
+
+\subsection{Dashboard}
+The dashboard (\cref{fig:dashboard}) is the audit summary: key-performance
+tiles (file count, total findings, mean complexity, build state), a
+severity-distribution ring, a panel of model-generated insights, and a
+short natural-language security summary. It answers ``how is this
+project doing'' in one view before the developer drills in.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{dashboard}
+  \caption{Dashboard---audit summary with severity distribution and
+           model-generated insight cards.}
+  \label{fig:dashboard}
+\end{figure}
+
+\subsection{Repository and Configuration}
+The repository screen registers a project from a Git URL or a single
+source file and lists the workspace ledger with per-project violation and
+complexity counts. The settings screen exposes the privacy controls
+(offline mode, no cloud transmission, encrypted storage), the Docker
+sandbox image and limits, the local model selection, and the analysis
+depth and complexity threshold.
+
+\subsection{Static Analysis}
+The static-analysis screen (\cref{fig:static}) is the primary triage
+surface. A file tree on the left is annotated with per-file finding
+counts; the centre pane shows the selected source; the lower pane lists
+that file's fused findings, each with a severity badge, the originating
+modality, a code excerpt, and a suggested fix. \Cref{fig:static} shows
+the model and pattern passes agreeing on a prompt-assembly weakness in
+the case-study project.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{static-analysis}
+  \caption{Static analysis---file tree, source view, and per-file fused
+           findings with remediation guidance.}
+  \label{fig:static}
+\end{figure}
+
+\subsection{AI Review}
+The AI-review screen (\cref{fig:aireview}) is an interactive companion to
+the automated pass: the developer selects a file and asks the local model
+free-form questions about it, or triggers a quick or deep review. All
+exchanges stay on \texttt{127.0.0.1}.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{ai-review}
+  \caption{AI review---file-scoped conversation with the on-device
+           \mbox{Llama~3.2} model.}
+  \label{fig:aireview}
+\end{figure}
+
+\subsection{Vulnerabilities Register}
+The vulnerabilities screen (\cref{fig:vulns}) is the cross-file view of
+every fused finding: critical-count, model-corroborated-count and total
+tiles above an expandable audit trail. Each row carries the file and line,
+the category, a corroboration marker, and, on expansion, the code context
+and remediation plan.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{vulnerabilities}
+  \caption{Vulnerabilities register---project-wide audit trail with
+           severity and corroboration markers.}
+  \label{fig:vulns}
+\end{figure}
+
+\subsection{Complexity}
+The complexity screen (\cref{fig:complexity}) reports mean cyclomatic
+complexity and decision-branch totals, a branching-trend chart, and a
+ranked list of structural hot-spots with a short refactoring note for the
+worst offender.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{complexity}
+  \caption{Complexity---mean cyclomatic complexity, branching trend, and
+           ranked structural hot-spots.}
+  \label{fig:complexity}
+\end{figure}
+
+\subsection{Dynamic Analysis and Container Insights}
+The dynamic-analysis screen (\cref{fig:dynamic}) provisions the sandbox
+and reports image build time, cold-start latency, live CPU, and memory
+allocation, with the raw Docker engine log. The container-insights screen
+overlays the static severity distribution and top-vulnerable-file ranking
+with live telemetry when the sandbox is running. The build-and-CI screen
+runs the project's build and test pipeline and streams its console.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{dynamic-analysis}
+  \caption{Dynamic analysis---sandbox build/start metrics, engine log,
+           and memory allocation.}
+  \label{fig:dynamic}
+\end{figure}
+
+\subsection{Risk Scoring and Reports}
+The risk-scoring screen (\cref{fig:risk}) renders the \phindex\ as a gauge
+with its band, the three sub-scores of \cref{sec:risk} as labelled bars,
+and a short model-written rationale. The reports screen (\cref{fig:reports})
+assembles the archival summary and finding ledger and exports the
+paginated PDF or JSON described in \cref{sec:method}.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{risk-scoring}
+  \caption{Risk scoring---\phindex\ gauge and the three disclosed
+           sub-scores of \cref{eq:sv,eq:sc,eq:sq}.}
+  \label{fig:risk}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{reports}
+  \caption{Reports---archival summary, reasoning ledger, and exportable
+           finding register.}
+  \label{fig:reports}
+\end{figure}

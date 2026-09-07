@@ -1,0 +1,29 @@
+\begin{table}[t]
+  \centering
+  \caption{Analysis modalities and the weakness categories each is
+           primarily responsible for.}
+  \label{tab:modalities}
+  \renewcommand{\arraystretch}{1.15}
+  \small
+  \begin{tabularx}{\columnwidth}{@{}l X@{}}
+    \toprule
+    \textbf{Modality} & \textbf{Primary responsibility} \\
+    \midrule
+    Pattern detection &
+      Hard-coded secrets, injection sinks, unsafe deserialisation,
+      request forgery, private-key material, missing authorisation
+      (CWE-77/89/502/918/798)~\cite{mitrecwe}. \\
+    Complexity engine &
+      Per-function cyclomatic complexity, decision-point counts, and
+      structural hot-spot ranking~\cite{mccabe1976}. \\
+    LLM semantic review &
+      Context-dependent issues: prompt-context handling, unbounded
+      resource use, error-suppression, non-determinism, and design
+      weaknesses specific to LLM-integrated
+      applications~\cite{owaspllm2025}. \\
+    Dynamic sandbox &
+      Buildability, start-up and resource behaviour, and coarse runtime
+      file/socket/process activity~\cite{merkel2014docker}. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}

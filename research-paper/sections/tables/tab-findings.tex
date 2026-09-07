@@ -1,0 +1,46 @@
+\begin{table*}[t]
+  \centering
+  \caption{Representative critical and high-severity findings from the
+           \textit{Vellum} audit. \textsc{p}\,=\,pattern rule,
+           \textsc{m}\,=\,on-device model, \textsc{p+m}\,=\,corroborated.}
+  \label{tab:findings}
+  \renewcommand{\arraystretch}{1.2}
+  \small
+  \begin{tabularx}{\textwidth}{@{}l l l c l X@{}}
+    \toprule
+    \textbf{Finding} & \textbf{Location} & \textbf{Severity} &
+    \textbf{CWE} & \textbf{Source} & \textbf{Summary} \\
+    \midrule
+    Prompt injection via unsanitised query &
+      \texttt{generation/prompt\_builder.py:88} & Critical & 77 & \textsc{p+m} &
+      Raw user query concatenated into the system prompt; can override the
+      guardrail preamble. \\
+    Unsafe deserialisation of embedding cache &
+      \texttt{embeddings/cache.py:52} & Critical & 502 & \textsc{p} &
+      \texttt{pickle.load} on a configuration-controlled path; write access
+      yields code execution. \\
+    Unbounded retrieval context &
+      \texttt{generation/prompt\_builder.py:132} & High & --- & \textsc{p+m} &
+      Chunks packed with no token budget; truncates the preamble and
+      inflates cost. \\
+    Server-side request forgery in loader &
+      \texttt{ingestion/loader.py:37} & High & 918 & \textsc{p+m} &
+      Document fetch accepts arbitrary URLs, including link-local metadata
+      endpoints. \\
+    SQL injection in metadata filter &
+      \texttt{retrieval/vector\_store.py:96} & High & 89 & \textsc{p+m} &
+      Caller-supplied filter interpolated into the candidate pre-filter
+      query. \\
+    Unauthenticated administrative re-index &
+      \texttt{api/routes.py:210} & High & 862 & \textsc{p} &
+      Index-rebuild route registered without the admin auth dependency. \\
+    Hard-coded provider credential &
+      \texttt{core/config.py:14} & Critical & 798 & \textsc{p} &
+      Provider key stored as a source literal. \\
+    Citation--context mismatch in guardrail &
+      \texttt{generation/guardrails.py:118} & Medium & --- & \textsc{m} &
+      Citations validated by document id only, not by the span placed in
+      the prompt. \\
+    \bottomrule
+  \end{tabularx}
+\end{table*}

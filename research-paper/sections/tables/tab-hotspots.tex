@@ -1,0 +1,19 @@
+\begin{table}[t]
+  \centering
+  \caption{Structural hot-spots: functions above the default cyclomatic
+           budget, ranked by $CC$.}
+  \label{tab:hotspots}
+  \renewcommand{\arraystretch}{1.15}
+  \small
+  \begin{tabular}{@{}l l c@{}}
+    \toprule
+    \textbf{Function} & \textbf{File\,:\,line} & \textbf{$CC$} \\
+    \midrule
+    \texttt{HybridRetriever.retrieve}   & \texttt{retrieval/hybrid\_retriever.py:142} & 26 \\
+    \texttt{PromptBuilder.assemble}     & \texttt{generation/prompt\_builder.py:88}   & 21 \\
+    \texttt{Chunker.split\_semantic}    & \texttt{ingestion/chunker.py:61}            & 19 \\
+    \texttt{Reranker.score\_batch}      & \texttt{retrieval/reranker.py:203}          & 17 \\
+    \texttt{EvalHarness.run\_suite}     & \texttt{eval/harness.py:154}                & 16 \\
+    \bottomrule
+  \end{tabular}
+\end{table}

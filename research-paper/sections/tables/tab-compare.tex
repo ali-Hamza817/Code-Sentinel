@@ -1,0 +1,28 @@
+\begin{table*}[t]
+  \centering
+  \caption{Qualitative positioning of \cs\ against representative points
+           in the tooling landscape. \checkmark\,=\,supported,
+           \textbf{--}\,=\,not supported, $\circ$\,=\,partial / optional.}
+  \label{tab:compare}
+  \renewcommand{\arraystretch}{1.25}
+  \small
+  \begin{tabularx}{\textwidth}{@{}X c c c c c c@{}}
+    \toprule
+    \textbf{Capability} &
+    \makecell{Local\\linter\\\scriptsize(e.g.~\cite{bandit})} &
+    \makecell{Rule SAST\\\scriptsize(e.g.~\cite{semgrep})} &
+    \makecell{Query SAST\\\scriptsize(e.g.~\cite{avgustinov2016})} &
+    \makecell{Cloud LLM\\review} &
+    \makecell{DL vuln.\\detector\\\scriptsize\cite{zhou2019devign,fu2022linevul}} &
+    \textbf{\cs} \\
+    \midrule
+    Runs fully offline / no code egress      & \checkmark & \checkmark & $\circ$ & \textbf{--} & $\circ$ & \checkmark \\
+    Pattern / rule-based detection           & \checkmark & \checkmark & \checkmark & \textbf{--} & \textbf{--} & \checkmark \\
+    Semantic (LLM) reasoning over code        & \textbf{--} & \textbf{--} & \textbf{--} & \checkmark & $\circ$ & \checkmark \\
+    Cyclomatic / structural metrics           & $\circ$ & \textbf{--} & $\circ$ & \textbf{--} & \textbf{--} & \checkmark \\
+    Dynamic / sandbox execution               & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \checkmark \\
+    Unified composite risk score              & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \checkmark \\
+    Developer-facing GUI with in-context triage & $\circ$ & $\circ$ & $\circ$ & $\circ$ & \textbf{--} & \checkmark \\
+    \bottomrule
+  \end{tabularx}
+\end{table*}

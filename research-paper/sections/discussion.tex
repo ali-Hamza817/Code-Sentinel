@@ -1,0 +1,65 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Why Local-First Is the Right Default}
+The case study completed a static, semantic, structural, and dynamic
+audit with no code leaving the machine. For the teams described in
+\cref{sec:intro}---proprietary, regulated, or air-gapped---this is the
+difference between a tool they can run today and one they cannot run at
+all. The cost is borne entirely in model capability, which we consider a
+better trade than the alternative, because the pattern and complexity
+passes are unaffected by model size and the model's role is advisory and
+always shown next to corroborating evidence.
+
+\subsection{The Recall Cost of a Small Model}
+A quantised \mbox{Llama~3.2} model is far smaller than the frontier models
+used in most published LLM-for-security
+work~\cite{pearce2023,khoury2023}. We expect it to miss subtle,
+cross-function, or dataflow-dependent vulnerabilities that a larger model
+or a dedicated learned detector~\cite{fu2022linevul} would catch, and to
+occasionally produce plausible but incorrect findings. \cs\ mitigates
+this in three ways: it constrains the model to a strict output schema and
+discards malformed items; it fuses model output with deterministic rules
+so that the unambiguous classes do not depend on the model; and it never
+auto-applies a fix. The interface is explicit that model findings are
+suggestions for a human to confirm.
+
+\subsection{Buildability and Dynamic Coverage}
+The dynamic pass requires a project that builds. When a repository has no
+Dockerfile, \cs\ synthesises a minimal one, which works for
+conventionally structured projects but will fail for those with unusual
+build systems or external service dependencies. The current behavioural
+event stream is coarse and, in the prototype, partly simulated for
+demonstration; a production version would attach a real syscall or eBPF
+monitor. Dynamic analysis in \cs\ is therefore a fast liveness-and-shape
+check, not a substitute for fuzzing~\cite{manes2021}.
+
+\subsection{Threats to Validity}
+\textbf{Construct.} The \phindex\ weights in \cref{eq:h} are chosen by
+design intent, not fitted to outcome data; the score is best read as an
+ordinal triage aid, and its calibration against expert judgement or
+incident data is open work. \textbf{Internal.} Finding fusion keys on
+$(\textit{file}, \textit{line}, \textit{category})$; line drift between
+the pattern and model passes can under- or over-merge, though severity is
+always taken as the maximum. \textbf{External.} The evaluation is a
+single, synthetic subject chosen to exercise a specific weakness class.
+It demonstrates what an audit produces and how it is presented; it does
+not establish precision, recall, or false-positive rate on real-world
+code. A study on a labelled corpus (with the dataset-quality caveats of
+\cite{croft2023,steenhoek2023}) and a comparison against established
+tools is required before efficacy claims can be made. \textbf{Conclusion.}
+Runtime figures are from one commodity machine and one workload and will
+vary with hardware and model quantisation.
+
+\subsection{Future Work}
+Four directions follow directly. \emph{(i)~Empirical evaluation} on a
+labelled multi-language vulnerability corpus, reporting precision/recall
+against ground truth and inter-tool agreement. \emph{(ii)~Deeper static
+analysis}: replace regex rules with an AST/code-property-graph
+layer~\cite{yamaguchi2014} to add inter-procedural taint tracking.
+\emph{(iii)~Model scaling and routing}: support larger local models where
+hardware permits, and route only ambiguous files to the model to control
+latency. \emph{(iv)~Workflow integration}: a headless mode and a
+pre-commit / CI gate driven by a \phindex\ threshold, plus a controlled
+user study of triage speed against the usability criteria of
+\cite{johnson2013,nachtigall2022}.

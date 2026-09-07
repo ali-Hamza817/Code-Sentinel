@@ -1,0 +1,36 @@
+\begin{abstract}
+Modern software teams increasingly depend on two classes of assistive
+technology to keep source code secure: static application security
+testing (SAST) and, more recently, large language models (LLMs) used for
+code review and vulnerability triage. Both are usually delivered as cloud
+services, which obliges an organisation to transmit proprietary source
+code to a third party and complicates adoption in regulated or air-gapped
+environments. This paper presents \cs, a local-first desktop platform that
+unifies pattern-based static analysis, containerised dynamic execution,
+and on-device LLM reasoning into a single privacy-preserving workflow for
+auditing the security and structural health of a source-code repository.
+Every stage runs on the developer's machine: pattern detectors and a
+cyclomatic-complexity engine operate in process, a quantised
+\mbox{Llama~3.2} model performs semantic review inside a local container,
+and a resource-limited Docker sandbox exercises the project at runtime.
+Findings from the three modalities are fused, de-duplicated, and combined
+with software metrics into a single \phindex. We describe the
+architecture, the analysis pipeline, and the scoring model, and we
+present the twelve-screen graphical interface through which a developer
+drives and inspects an audit. A worked case study on a representative
+retrieval-augmented-generation service ($47$ files, ${\sim}5.2$~KLOC)
+shows the platform surfacing $20$ findings spanning credential handling,
+prompt and query injection, unsafe deserialisation, and server-side
+request forgery, alongside five cyclomatic hot-spots and a moderate
+composite risk score, while completing end to end in under a minute and
+without a single outbound network request. We discuss the trade-offs of
+local inference, the limitations of the current prototype, and directions
+for a larger empirical evaluation.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Static application security testing, large language models, on-device
+inference, dynamic analysis, cyclomatic complexity,
+retrieval-augmented generation, privacy-preserving software tools,
+developer tooling.
+\end{IEEEkeywords}

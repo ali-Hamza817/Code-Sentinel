@@ -1,0 +1,94 @@
+\section{Case Study and Results}
+\label{sec:results}
+
+\subsection{Subject}
+We exercise \cs\ on \vellum, a retrieval-augmented-generation (RAG)
+service written in Python. \Cref{tab:subject} summarises its profile. The
+project is a synthetic but representative subject: it is structured like a
+production RAG system---document loader, semantic chunker, embedding cache,
+hybrid dense/sparse retriever, cross-encoder reranker, guardrailed
+generator, and an evaluation harness---and it contains the categories of
+weakness that the OWASP Top~10 for LLM Applications~\cite{owaspllm2025}
+and the indirect-prompt-injection
+literature~\cite{greshake2023,perez2022ignore} identify as characteristic
+of this application class. The study is intended as an
+\emph{illustrative walkthrough} of what an audit produces and how it is
+presented, not as an accuracy benchmark against ground-truth labels;
+\cref{sec:discussion} treats the latter as future work.
+
+\input{sections/tables/tab-subject}
+
+\subsection{Findings}
+A full audit surfaced $20$ fused findings. \Cref{tab:severity} breaks them
+down by severity and category, and \cref{tab:findings} lists a
+representative subset with location, identifier, and the modality that
+surfaced each. Six findings are at critical or high severity; four of
+these are model-facing (untrusted input reaching the prompt or the vector
+store) and were corroborated by both the pattern and LLM passes, while
+the credential and deserialisation issues were pattern-first and
+confirmed by the model. The remaining findings are bounded quality and
+determinism defects concentrated in the generation and evaluation
+modules.
+
+\input{sections/tables/tab-severity}
+\input{sections/tables/tab-findings}
+
+\subsection{Structural Hot-Spots}
+The complexity engine flagged five functions above the default budget
+(\cref{tab:hotspots}); \texttt{HybridRetriever.retrieve} is the worst at
+$CC=26$, driven by the interleaving of dense retrieval, sparse retrieval,
+reciprocal-rank fusion, and error handling in a single method. Mean
+cyclomatic complexity across the project is $\overline{CC}=7.8$ over
+$214$ decision points---healthy on average, with the risk concentrated in
+a small number of methods, which is exactly the signal the hot-spot
+ranking is meant to expose.
+
+\input{sections/tables/tab-hotspots}
+
+\subsection{Composite Risk}
+Substituting the case-study values into \cref{eq:sv,eq:sc,eq:sq,eq:h}
+with $n_{\text{sev}}=6$, $\overline{CC}=7.8$, and $a=1$ gives
+$s_v = 40$, $s_c = 61$, $s_q = 95$, and
+\[
+  H = \operatorname{round}(0.5{\cdot}40 + 0.3{\cdot}61 + 0.2{\cdot}95)
+    = \operatorname{round}(57.3) = 57,
+\]
+i.e.\ the \emph{moderate risk} band (\cref{tab:risk}). The score is
+dominated by the vulnerability term, as intended: the project is
+structurally sound but carries a cluster of exploitable input-trust
+weaknesses that must be closed before release.
+
+\input{sections/tables/tab-risk}
+
+\subsection{Runtime Behaviour}
+\Cref{tab:perf} reports the dynamic pass. The image builds in
+$18.4$\,s and the container reaches a healthy state in under a second;
+steady-state resident memory is $241$\,MiB of a $628$\,MiB limit at
+${\sim}6\%$ CPU while serving the built-in evaluation load. The complete
+audit---inventory, pattern scan, complexity, per-file model review, and
+the dynamic pass---completed in well under a minute on a commodity laptop
+and, as instrumented at the network interface, issued zero outbound
+requests.
+
+\input{sections/tables/tab-perf}
+
+\subsection{Modality Agreement}
+Of the six critical/high findings, four were reported independently by
+both the pattern rules and the local model, one (unsafe deserialisation)
+was pattern-first, and one (a citation-integrity weakness in the
+guardrail path) was model-only---the model reasoned about the semantic
+gap between ``document cited'' and ``span actually placed in the
+prompt,'' which no syntactic rule in the set encodes. This is the
+intended division of labour: rules provide precision and determinism for
+the unambiguous classes, and the model contributes judgement on the
+context-dependent ones, with fusion (\cref{sec:fusion}) reconciling the
+two.
+
+\subsection{Positioning}
+\Cref{tab:compare} places \cs\ against representative points in the tool
+landscape along the axes that motivated its design. The distinguishing
+combination is \emph{local execution} with \emph{semantic reasoning} and
+a \emph{dynamic} pass in one developer-facing workflow; the individual
+capabilities are not novel in isolation.
+
+\input{sections/tables/tab-compare}
