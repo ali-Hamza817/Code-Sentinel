@@ -1,125 +1,144 @@
 import { useState } from "react";
-import { Shield, AlertCircle, AlertTriangle, Info, ChevronDown, ChevronRight, Search, BrainCircuit, Sparkles, Terminal, ShieldCheck } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
+import {
+  Shield,
+  AlertCircle,
+  AlertTriangle,
+  Info,
+  ChevronDown,
+  ChevronRight,
+  Search,
+  Sparkles,
+  Terminal,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useProjectStore } from "../store/projectStore";
+import {
+  PageContainer,
+  PageHeader,
+  MetricCard,
+  EmptyState,
+  ScreenEmpty,
+  severityBadgeClass,
+} from "../components/common";
 
 function VulnerabilityCard({ vulnerability }: { vulnerability: any }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isAI = vulnerability.type?.startsWith('AI:');
+  const isAI = vulnerability.type?.startsWith("AI:");
 
   const Icon =
     vulnerability.severity === "critical"
       ? AlertCircle
       : vulnerability.severity === "high"
-      ? AlertTriangle
-      : isAI ? BrainCircuit : Info;
+        ? AlertTriangle
+        : isAI
+          ? Sparkles
+          : Info;
 
   return (
-    <Card className={`border-slate-200 hover:border-blue-200 transition-all shadow-sm ${isAI ? 'bg-gradient-to-r from-purple-50/20 to-white' : ''} text-left`}>
-      <CardContent className="p-5">
-        <div
-          className="flex items-start gap-4 cursor-pointer"
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm transition-colors hover:border-slate-300">
+      <div className="p-5">
+        <button
+          type="button"
+          className="flex w-full items-start gap-4 text-left"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div
-            className={`p-2.5 rounded-xl shrink-0 ${
-              vulnerability.severity === "critical" ? "bg-red-50 text-red-600" : 
-              vulnerability.severity === "high" ? "bg-orange-50 text-orange-600" :
-              isAI ? "bg-purple-100 text-purple-600" : "bg-blue-50 text-blue-600"
+            className={`shrink-0 rounded-lg p-2 ${
+              vulnerability.severity === "critical"
+                ? "bg-red-50 text-red-600"
+                : vulnerability.severity === "high"
+                  ? "bg-amber-50 text-amber-600"
+                  : isAI
+                    ? "bg-blue-50 text-blue-600"
+                    : "bg-slate-100 text-slate-500"
             }`}
           >
-            <Icon className="w-5 h-5" />
+            <Icon className="h-4 w-4" />
           </div>
 
-          <div className="flex-1 min-w-0 text-left">
-            <div className="flex items-start justify-between gap-3 mb-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base font-bold text-slate-900 text-left">
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex items-start justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm font-semibold text-slate-900">
                   {vulnerability.title || vulnerability.message}
                 </h3>
-                <Badge
-                  variant="outline"
-                  className={`text-[10px] uppercase font-bold px-2 py-0.5 border-none ${
-                    vulnerability.severity === "critical"
-                      ? "bg-red-600 text-white"
-                      : vulnerability.severity === "high"
-                      ? "bg-orange-600 text-white"
-                      : "bg-blue-600 text-white"
-                  }`}
+                <span
+                  className={`rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${severityBadgeClass(
+                    vulnerability.severity,
+                  )}`}
                 >
                   {vulnerability.severity}
-                </Badge>
+                </span>
                 {isAI && (
-                    <Badge className="bg-purple-600 text-white border-none text-[10px] font-bold uppercase px-2 py-0.5 flex items-center gap-1.5">
-                        <Sparkles className="w-3 h-3" />
-                        AI Verified
-                    </Badge>
+                  <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+                    <Sparkles className="h-3 w-3" />
+                    AI verified
+                  </span>
                 )}
               </div>
               {isExpanded ? (
-                <ChevronDown className="w-5 h-5 text-slate-300 shrink-0" />
+                <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
               ) : (
-                <ChevronRight className="w-5 h-5 text-slate-300 shrink-0" />
+                <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
               )}
             </div>
 
-            <p className="text-sm text-slate-600 font-medium mb-3 leading-relaxed text-left">
-              {vulnerability.description.replace('[DEEP REASONING] ', '')}
+            <p className="mb-3 text-sm leading-relaxed text-slate-600">
+              {vulnerability.description.replace("[DEEP REASONING] ", "")}
             </p>
 
-            <div className="flex items-center gap-4 text-xs font-semibold text-slate-400 text-left">
-              <span className="bg-slate-50 px-2 py-0.5 rounded border border-slate-100 italic lowercase font-normal">{vulnerability.file || 'Global Context'}</span>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+              <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono lowercase">
+                {vulnerability.file || "global context"}
+              </span>
               {vulnerability.line > 0 && <span>Line {vulnerability.line}</span>}
-              <span className="text-blue-500 uppercase tracking-wider text-[10px]">{vulnerability.type}</span>
+              <span className="font-medium uppercase tracking-wide text-slate-400">
+                {vulnerability.type}
+              </span>
             </div>
           </div>
-        </div>
+        </button>
 
         {isExpanded && (
-          <div className="mt-6 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300 space-y-6 text-left">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2 text-left">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2 text-left">
-                    <Terminal className="w-4 h-4 text-blue-500" />
-                    Code Context
+          <div className="mt-5 space-y-5 border-t border-slate-100 pt-5">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="space-y-2">
+                <h4 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  <Terminal className="h-3.5 w-3.5" />
+                  Code context
                 </h4>
-                <div className="p-4 bg-slate-900 rounded-xl text-xs font-mono overflow-x-auto shadow-inner text-left">
-                    <code className="text-blue-300">{vulnerability.snippet || '// No additional context available'}</code>
+                <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-xs">
+                  <code className="text-blue-300">
+                    {vulnerability.snippet || "// No additional context available"}
+                  </code>
                 </div>
-                </div>
+              </div>
 
-                <div className="space-y-2 text-left">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2 text-left">
-                    <ShieldCheck className="w-4 h-4 text-green-500" />
-                    Remediation Plan
+              <div className="space-y-2">
+                <h4 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Remediation plan
                 </h4>
-                <div className={`p-4 rounded-xl text-sm font-medium leading-relaxed border text-left ${isAI ? 'bg-purple-50/50 border-purple-100 text-purple-900' : 'bg-slate-50 border-slate-100 text-slate-700'}`}>
-                    {isAI ? (
-                        <div className="space-y-2 text-left text-left">
-                             <p className="font-bold uppercase tracking-wider text-[10px] opacity-40">Reasoning Result</p>
-                             <p className="italic text-left">{vulnerability.description.split(']')[1] || vulnerability.description}</p>
-                        </div>
-                    ) : (
-                        vulnerability.description
-                    )}
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm leading-relaxed text-slate-700">
+                  {isAI
+                    ? vulnerability.description.split("]")[1] ||
+                      vulnerability.description
+                    : vulnerability.description}
                 </div>
-                </div>
-             </div>
+              </div>
+            </div>
 
-            <div className="flex gap-2 pt-2 text-left">
-              <Button size="sm" variant="outline" className="text-xs font-bold h-9 px-4 border-slate-200">
-                Silence Vector
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline">
+                Silence finding
               </Button>
-              <Button size="sm" className="bg-slate-900 hover:bg-black text-xs font-bold h-9 px-4">
-                Execute Fix
-              </Button>
+              <Button size="sm">Apply fix</Button>
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -130,125 +149,88 @@ export function Vulnerabilities() {
 
   if (!activeProject) {
     return (
-      <div className="flex flex-col items-center justify-center h-full space-y-6 animate-in fade-in duration-700">
-        <div className="p-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 text-left">
-          <Shield className="w-16 h-16 text-slate-300 mx-auto" />
-        </div>
-        <div className="text-center space-y-1">
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight text-center">No Active Workspace</h2>
-          <p className="text-sm text-slate-500 font-medium italic text-center text-center">Connect a repository to audit vulnerabilities.</p>
-        </div>
-      </div>
+      <ScreenEmpty
+        icon={Shield}
+        title="No active workspace"
+        description="Connect a repository to audit vulnerabilities."
+      />
     );
   }
 
-  const findings = (activeProject.findings || []).filter(f => 
-    f.message?.toLowerCase().includes(search.toLowerCase()) || 
-    f.type?.toLowerCase().includes(search.toLowerCase())
+  const findings = (activeProject.findings || []).filter(
+    (f) =>
+      f.message?.toLowerCase().includes(search.toLowerCase()) ||
+      f.type?.toLowerCase().includes(search.toLowerCase()),
   );
 
   const criticalCount = findings.filter((v) => v.severity === "critical").length;
-  const highCount = findings.filter((v) => v.severity === "high").length;
-  const aiCount = findings.filter((v) => v.type?.startsWith('AI:')).length;
+  const aiCount = findings.filter((v) => v.type?.startsWith("AI:")).length;
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-700">
-      <div className="flex items-start justify-between">
-        <div className="text-left">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 text-left">Security Registry</h2>
-          <p className="text-sm font-medium text-slate-500 mt-1 text-left">
-            Detected architectural weaknesses in <span className="text-blue-600 font-bold">{activeProject.name}</span>
-          </p>
-        </div>
-        <div className="relative text-left">
-          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input 
-            type="text" 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Filter findings..." 
-            className="pl-10 pr-6 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all w-72"
-          />
-        </div>
+    <PageContainer>
+      <PageHeader
+        eyebrow="Vulnerabilities"
+        title={activeProject.name}
+        description="Detected architectural weaknesses in the active workspace"
+        actions={
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Filter findings…"
+              className="w-64 rounded-md border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400/30"
+            />
+          </div>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <MetricCard
+          label="Critical risks"
+          value={criticalCount}
+          icon={AlertCircle}
+          tone="critical"
+        />
+        <MetricCard
+          label="AI reasoning"
+          value={aiCount}
+          icon={Sparkles}
+          tone="info"
+        />
+        <MetricCard
+          label="Total findings"
+          value={findings.length}
+          icon={Shield}
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none bg-red-600 shadow-xl shadow-red-50 text-left">
-          <CardContent className="p-6 text-left">
-            <div className="flex items-center justify-between text-left">
-              <div className="text-left text-left">
-                <p className="text-xs font-bold text-white/70 uppercase tracking-wider mb-1 text-left">Critical Risks</p>
-                <p className="text-4xl font-bold text-white text-left">
-                  {criticalCount}
-                </p>
-              </div>
-              <div className="p-4 bg-white/10 rounded-xl">
-                <AlertCircle className="w-8 h-8 text-white" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none bg-slate-900 shadow-xl shadow-slate-100 text-left text-left">
-          <CardContent className="p-6 text-left">
-            <div className="flex items-center justify-between text-left">
-              <div className="text-left text-left">
-                <p className="text-xs font-bold text-white/60 uppercase tracking-wider mb-1 text-left">AI Reasoning</p>
-                <p className="text-4xl font-bold text-white">
-                  {aiCount}
-                </p>
-              </div>
-              <div className="p-4 bg-white/10 rounded-xl">
-                <BrainCircuit className="w-8 h-8 text-blue-400 animate-pulse" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 bg-white shadow-sm text-left">
-          <CardContent className="p-6 text-left">
-            <div className="flex items-center justify-between text-left">
-              <div className="text-left text-left">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 text-left">Total Findings</p>
-                <p className="text-4xl font-bold text-slate-900">
-                  {findings.length}
-                </p>
-              </div>
-              <div className="p-4 bg-slate-50 rounded-xl">
-                <Shield className="w-8 h-8 text-slate-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4 text-left text-left">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-left">Active Audit Trail</h3>
-          <div className="flex gap-4 text-left">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-left">Identified: {findings.length}</p>
-            <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest text-left">Deep reasoning: {aiCount}</p>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            Active audit trail
+          </h3>
+          <div className="flex gap-4 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            <span>Identified: {findings.length}</span>
+            <span className="text-blue-600">Deep reasoning: {aiCount}</span>
           </div>
         </div>
-        
+
         {findings.length === 0 ? (
-          <div className="py-24 text-center space-y-4 bg-slate-50/50 rounded-3xl border border-slate-100">
-             <div className="w-16 h-16 bg-white rounded-2xl shadow-sm mx-auto flex items-center justify-center">
-                <ShieldCheck className="w-8 h-8 text-green-500" />
-             </div>
-             <div className="space-y-1">
-                <p className="text-sm font-bold text-slate-900 text-center">No vulnerabilities detected</p>
-                <p className="text-xs font-medium text-slate-500 text-center uppercase tracking-widest">Heuristic pass is complete</p>
-             </div>
-          </div>
+          <EmptyState
+            icon={ShieldCheck}
+            title="No vulnerabilities detected"
+            description="The heuristic pass is complete and found no architectural weaknesses."
+          />
         ) : (
-          <div className="grid grid-cols-1 gap-6">
+          <div className="space-y-4">
             {findings.map((vulnerability, idx) => (
               <VulnerabilityCard key={idx} vulnerability={vulnerability} />
             ))}
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

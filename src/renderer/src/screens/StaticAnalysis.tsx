@@ -17,7 +17,8 @@ import {
 import { Badge } from "../components/ui/badge";
 import { useProjectStore, ScanFinding } from "../store/projectStore";
 import { Input } from "../components/ui/input";
-import { Card, CardContent } from "../components/ui/card";
+import { ScreenEmpty, severityBadgeClass } from "../components/common";
+import { DEMO_STATIC_FILES, demoCodeFor } from "../lib/demo";
 
 // Build tree from flat file paths
 const buildFileTree = (paths: string[], rootPath: string) => {
@@ -78,7 +79,7 @@ function FileTreeItem({ item, level = 0, onSelect, selectedPath, findingCount }:
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <ChevronDown className="w-3 h-3 text-slate-400" /> : <ChevronRight className="w-3 h-3 text-slate-400" />}
-        <Folder className="w-3.5 h-3.5 text-blue-500 fill-blue-500/20" />
+        <Folder className="w-3.5 h-3.5 text-slate-400" />
         <span className="text-xs font-medium text-slate-700">{item.name}</span>
       </div>
       {isOpen && item.children && (
@@ -145,11 +146,19 @@ export function StaticAnalysis() {
   }, [treeData, searchQuery]);
 
   useEffect(() => {
-    if (activeProject?.path) loadFiles();
+    if (activeProject?.demo || activeProject?.path) loadFiles();
   }, [activeProject?.id]);
 
   const loadFiles = async () => {
     try {
+      if (activeProject?.demo) {
+        setFiles(DEMO_STATIC_FILES);
+        handleFileSelect(
+          DEMO_STATIC_FILES.find((f) => f.endsWith("prompt_builder.py")) ??
+            DEMO_STATIC_FILES[0],
+        );
+        return;
+      }
       const allFiles = await (window as any).api.getFiles(activeProject?.path);
       setFiles(allFiles || []);
       if (allFiles?.length > 0) handleFileSelect(allFiles[0]);
@@ -162,7 +171,9 @@ export function StaticAnalysis() {
     setSelectedFile(filePath);
     setIsLoading(true);
     try {
-      const content = await (window as any).api.readFile(filePath);
+      const content = activeProject?.demo
+        ? demoCodeFor(filePath)
+        : await (window as any).api.readFile(filePath);
       setCode(content || '');
 
       // Match findings from the global deep-audit store for this specific file
@@ -181,13 +192,11 @@ export function StaticAnalysis() {
 
   if (!activeProject) {
     return (
-      <div className="flex flex-col items-center justify-center h-full space-y-4 animate-in fade-in duration-500">
-        <div className="p-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-          <Code2 className="w-12 h-12 text-slate-300 mx-auto" />
-        </div>
-        <h2 className="text-xl font-bold text-slate-900">No Active Workspace</h2>
-        <p className="text-slate-500 text-sm text-center max-w-xs">Connect a repository to start per-file static analysis with Llama 3.2.</p>
-      </div>
+      <ScreenEmpty
+        icon={Code2}
+        title="No active workspace"
+        description="Connect a repository to start per-file static analysis with Llama 3.2."
+      />
     );
   }
 
@@ -199,20 +208,26 @@ export function StaticAnalysis() {
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shrink-0">
+      <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Static Analysis</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            LLM-powered code audit for <span className="font-semibold text-blue-600">{activeProject.name}</span>
-            <span className="ml-3 text-slate-400">·</span>
-            <span className="ml-3">{allFindings.length} total findings</span>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            Static analysis
+          </p>
+          <h1 className="text-base font-semibold text-slate-900">
+            {activeProject.name}
+          </h1>
+          <p className="mt-0.5 text-xs text-slate-500">
+            LLM-powered code audit · {allFindings.length} total findings
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] font-bold">
-            <BrainCircuit className="w-3 h-3 mr-1" /> Llama 3.2
+          <Badge className="gap-1 rounded-md border-transparent bg-blue-50 text-[11px] font-semibold text-blue-700">
+            <BrainCircuit className="h-3 w-3" /> Llama 3.2
           </Badge>
-          <Badge variant="outline" className="text-[10px] font-bold text-slate-500">
+          <Badge
+            variant="outline"
+            className="rounded-md text-[11px] font-semibold text-slate-500"
+          >
             {files.length} files
           </Badge>
         </div>
@@ -272,68 +287,93 @@ export function StaticAnalysis() {
 
           {/* Bottom: Findings Panel */}
           <div className="h-80 border-t border-slate-200 flex flex-col bg-white shrink-0">
-            <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                <Zap className="w-3.5 h-3.5 text-yellow-500" />
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+              <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                 Findings for this file
-                <span className="ml-1 bg-slate-100 text-slate-600 text-[10px] font-black px-2 py-0.5 rounded-full">
+                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
                   {fileFindings.length}
                 </span>
               </h3>
-              <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                <span className="flex items-center gap-1"><BrainCircuit className="w-3 h-3 text-purple-500" />{aiFindings.length} AI</span>
-                <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-blue-500" />{patternFindings.length} Pattern</span>
+              <div className="flex items-center gap-3 text-[11px] text-slate-400">
+                <span className="flex items-center gap-1">
+                  <BrainCircuit className="h-3 w-3 text-blue-500" />
+                  {aiFindings.length} AI
+                </span>
+                <span className="flex items-center gap-1">
+                  <Zap className="h-3 w-3 text-slate-400" />
+                  {patternFindings.length} pattern
+                </span>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {fileFindings.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-slate-300 space-y-2">
-                  <ShieldCheck className="w-10 h-10" />
-                  <p className="text-xs font-medium uppercase tracking-widest">No issues found in this file</p>
-                  {activeProject.status === 'scanning' && (
-                    <p className="text-[10px] text-blue-500">Deep audit running — findings will appear when complete</p>
+                <div className="flex h-full flex-col items-center justify-center gap-2 text-slate-300">
+                  <ShieldCheck className="h-9 w-9" />
+                  <p className="text-[11px] font-semibold uppercase tracking-wide">
+                    No issues found in this file
+                  </p>
+                  {activeProject.status === "scanning" && (
+                    <p className="text-[11px] text-blue-500">
+                      Deep audit running — findings appear when complete
+                    </p>
                   )}
                 </div>
               ) : (
                 fileFindings.map((finding, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all">
-                    <div className={`p-1.5 rounded-lg shrink-0 ${
-                      finding.severity === 'critical' ? 'bg-red-50 text-red-600' :
-                      finding.severity === 'high' ? 'bg-orange-50 text-orange-600' :
-                      finding.severity === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-600'
-                    }`}>
+                  <div
+                    key={idx}
+                    className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:border-slate-300"
+                  >
+                    <div
+                      className={`shrink-0 rounded-lg p-1.5 ${
+                        finding.severity === "critical"
+                          ? "bg-red-50 text-red-600"
+                          : finding.severity === "high" ||
+                              finding.severity === "medium"
+                            ? "bg-amber-50 text-amber-600"
+                            : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
                       <SeverityIcon severity={finding.severity} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
-                          finding.severity === 'critical' ? 'bg-red-100 text-red-700' :
-                          finding.severity === 'high' ? 'bg-orange-100 text-orange-700' :
-                          finding.severity === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
-                        }`}>{finding.severity}</span>
-                        {finding.type?.startsWith('AI:') && (
-                          <span className="text-[10px] font-bold text-purple-600 flex items-center gap-0.5">
-                            <BrainCircuit className="w-3 h-3" /> AI Expert
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-center gap-2">
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${severityBadgeClass(
+                            finding.severity,
+                          )}`}
+                        >
+                          {finding.severity}
+                        </span>
+                        {finding.type?.startsWith("AI:") && (
+                          <span className="flex items-center gap-0.5 text-[10px] font-semibold text-blue-600">
+                            <BrainCircuit className="h-3 w-3" /> AI expert
                           </span>
                         )}
-                        <span className="text-[11px] font-mono text-slate-400">Line {finding.line}</span>
+                        <span className="font-mono text-[11px] text-slate-400">
+                          Line {finding.line}
+                        </span>
                       </div>
-                      <p className="text-sm font-bold text-slate-900 mb-1">{finding.title}</p>
-                      <p className="text-[12px] text-slate-600 leading-relaxed font-medium">{finding.description}</p>
+                      <p className="mb-1 text-sm font-semibold text-slate-900">
+                        {finding.title}
+                      </p>
+                      <p className="text-xs leading-relaxed text-slate-600">
+                        {finding.description}
+                      </p>
                       {finding.affectedCode && (
-                        <div className="mt-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
-                          <code className="block text-[10px] font-mono text-green-400 whitespace-pre overflow-x-auto">
+                        <div className="mt-2 rounded-lg border border-slate-800 bg-slate-950 p-2">
+                          <code className="block overflow-x-auto whitespace-pre font-mono text-[10px] text-emerald-400">
                             {finding.affectedCode}
                           </code>
                         </div>
                       )}
                       {finding.suggestedFix && (
-                        <div className="mt-2 p-2 bg-blue-50/50 rounded-lg border border-blue-100 flex items-start gap-2">
-                           <Lightbulb className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" />
-                           <p className="text-[11px] text-blue-800 font-bold leading-relaxed">
-                             Fix: {finding.suggestedFix}
-                           </p>
+                        <div className="mt-2 flex items-start gap-2 rounded-lg border border-blue-100 bg-blue-50/60 p-2">
+                          <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
+                          <p className="text-[11px] font-medium leading-relaxed text-blue-800">
+                            Fix: {finding.suggestedFix}
+                          </p>
                         </div>
                       )}
                     </div>

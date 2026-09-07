@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { DEMO_MODE, VELLUM_DEMO, VELLUM_ID } from '../lib/demo';
 
 export interface ScanFinding {
   id: string;
@@ -48,6 +49,8 @@ export interface Project {
   sandboxStatus?: 'stopped' | 'building' | 'running';
   type: 'repo' | 'file';
   fileExtension?: string;
+  /** Presentation-only sample project — never persisted. */
+  demo?: boolean;
 }
 
 interface ProjectState {
@@ -94,12 +97,25 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
 
   loadProjects: async () => {
     try {
-      const projects = await (window as any).api.getProjects();
-      if (projects && projects.length > 0) {
-        set({ projects, activeProjectId: projects[0].id });
+      const stored = await (window as any).api.getProjects();
+      const real = (stored || []).filter((p: Project) => p.id !== VELLUM_ID);
+      const list = DEMO_MODE
+        ? [VELLUM_DEMO as unknown as Project, ...real]
+        : real;
+      if (list.length > 0) {
+        set({
+          projects: list,
+          activeProjectId: DEMO_MODE ? VELLUM_ID : list[0].id,
+        });
       }
     } catch (err) {
       console.error('[Store] Failed to load projects:', err);
+      if (DEMO_MODE) {
+        set({
+          projects: [VELLUM_DEMO as unknown as Project],
+          activeProjectId: VELLUM_ID,
+        });
+      }
     }
   },
 
@@ -366,6 +382,7 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
     set((state) => ({
       projects: state.projects.map(p => p.id === id ? updated : p)
     }));
+    if (project.demo) return; // never persist the sample project
     await (window as any).api.saveProject(updated);
   },
 

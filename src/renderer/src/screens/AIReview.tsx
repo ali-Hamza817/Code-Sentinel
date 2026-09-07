@@ -17,11 +17,11 @@ import {
   AlertCircle,
   Info
 } from "lucide-react";
-import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { useProjectStore, ScanFinding } from "../store/projectStore";
-import { Progress } from "../components/ui/progress";
+import { ScreenEmpty } from "../components/common";
+import { DEMO_AI_CHAT, DEMO_AI_FILES } from "../lib/demo";
 import ReactMarkdown from 'react-markdown';
 
 interface Message {
@@ -47,6 +47,16 @@ export function AIReview() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (activeProject?.demo) {
+      setFiles(DEMO_AI_FILES);
+      setSelectedFile(
+        (prev) =>
+          prev ??
+          DEMO_AI_FILES.find((f) => f.endsWith("prompt_builder.py")) ??
+          DEMO_AI_FILES[0],
+      );
+      return;
+    }
     if (activeProject?.path) {
       loadProjectFiles();
     }
@@ -119,7 +129,9 @@ export function AIReview() {
     }
   };
 
-  const currentMessages = selectedFile ? (chatHistory[selectedFile] || []).filter(m => !m.isContext) : [];
+  const realMessages = selectedFile ? (chatHistory[selectedFile] || []).filter(m => !m.isContext) : [];
+  // Seed a sample exchange so the panel reads as an active session for docs.
+  const currentMessages = realMessages.length > 0 ? realMessages : (selectedFile ? DEMO_AI_CHAT : []);
   const currentFileName = selectedFile ? selectedFile.split(/[\\/]/).pop() : "";
 
   const handleQuickAudit = async () => {
@@ -258,32 +270,36 @@ export function AIReview() {
 
   if (!activeProject) {
     return (
-      <div className="flex flex-col items-center justify-center h-full space-y-4">
-        <div className="p-4 bg-slate-50 rounded-full border border-slate-200 text-slate-300">
-          <BrainCircuit className="w-12 h-12" />
-        </div>
-        <h2 className="text-xl font-bold text-slate-900">No AI Context</h2>
-      </div>
+      <ScreenEmpty
+        icon={Sparkles}
+        title="No AI context"
+        description="Select a project to review its files with the local model."
+      />
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-white overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden bg-white">
       {/* Header */}
-      <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-white to-slate-50 sticky top-0 z-10 shrink-0">
-        <div className="flex items-center gap-3 text-left">
-          <div className="p-2 bg-purple-50 rounded-lg">
-            <BrainCircuit className="w-6 h-6 text-purple-600" />
+      <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg bg-blue-50 p-2">
+            <Sparkles className="h-5 w-5 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">AI Architect Chat</h1>
-            <div className="flex items-center gap-3 mt-1">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                Llama 2 Fast Mode
+            <h1 className="text-base font-semibold tracking-tight text-slate-900">
+              AI architect chat
+            </h1>
+            <div className="mt-0.5 flex items-center gap-2">
+              <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Llama 2 fast mode
               </p>
-              {isContextSynced && (
-                <Badge variant="outline" className="text-[9px] px-2 bg-green-50 text-green-600 border-green-100 font-black uppercase">
+              {(isContextSynced || currentMessages.length > 0) && (
+                <Badge
+                  variant="outline"
+                  className="rounded-md border-emerald-200 bg-emerald-50 px-2 text-[10px] font-semibold uppercase text-emerald-600"
+                >
                   Ready
                 </Badge>
               )}
@@ -294,42 +310,43 @@ export function AIReview() {
           <Button
             onClick={handleQuickAudit}
             disabled={isGenerating || !selectedFile}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-9 px-3 gap-2 text-xs transition-all active:scale-95"
+            variant="outline"
+            className="gap-2"
           >
-            <Zap className="w-3.5 h-3.5 fill-current" />
-            QUICK
+            <Zap className="h-3.5 w-3.5" />
+            Quick
           </Button>
           <Button
             onClick={handleAudit}
             disabled={isGenerating || !selectedFile}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-bold h-9 px-4 gap-2 text-xs transition-all active:scale-95"
+            className="gap-2"
           >
-            <Zap className="w-3.5 h-3.5 fill-current" />
-            DEEP AUDIT
+            <Sparkles className="h-3.5 w-3.5" />
+            Deep audit
           </Button>
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden gap-0">
         {/* Sidebar */}
-        <div className="w-64 border-r border-slate-200 bg-slate-50 overflow-y-auto flex flex-col shrink-0">
-          <div className="p-4 border-b border-slate-200">
-            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.15em] mb-3">
+        <div className="flex w-64 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-slate-50">
+          <div className="border-b border-slate-200 p-4">
+            <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
               Files
             </h3>
             <div className="space-y-1">
               {files.map((file, idx) => {
                 const fname = file.split(/[\\/]/).pop();
                 const isSelected = selectedFile === file;
-                
+
                 return (
                   <button
                     key={idx}
                     onClick={() => setSelectedFile(file)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-all text-sm font-medium truncate ${
-                      isSelected 
-                        ? "bg-white text-purple-600 border border-purple-200 shadow-sm" 
-                        : "text-slate-600 hover:bg-slate-100 border border-transparent"
+                    className={`w-full truncate rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
+                      isSelected
+                        ? "border border-blue-200 bg-white text-blue-700 shadow-sm"
+                        : "border border-transparent text-slate-600 hover:bg-slate-100"
                     }`}
                     title={fname}
                   >
@@ -366,8 +383,8 @@ export function AIReview() {
                 >
                   {/* Avatar */}
                   {msg.role === 'assistant' && (
-                    <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0 mt-1">
-                      <Bot className="w-5 h-5 text-purple-600" />
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 mt-1">
+                      <Bot className="w-5 h-5 text-blue-600" />
                     </div>
                   )}
 
@@ -375,28 +392,34 @@ export function AIReview() {
                   <div
                     className={`max-w-2xl px-4 py-3 rounded-lg word-wrap break-words ${
                       msg.role === 'user'
-                        ? 'bg-purple-600 text-white rounded-br-none'
+                        ? 'bg-blue-600 text-white rounded-br-none'
                         : 'bg-slate-100 text-slate-900 rounded-bl-none border border-slate-200'
                     }`}
                   >
                     {msg.role === 'assistant' ? (
-                      <div className="prose prose-sm max-w-none dark:prose-invert">
+                      <div className="prose prose-sm max-w-none prose-slate">
                         <ReactMarkdown
                           components={{
-                            code: ({ inline, children }) => (
-                              inline ? (
-                                <code className="bg-slate-200 px-2 py-0.5 rounded text-xs font-mono break-words">
+                            code: ({ className, children }) => {
+                              const text = String(children ?? "");
+                              const isBlock =
+                                /language-/.test(className || "") ||
+                                text.includes("\n");
+                              return isBlock ? (
+                                <code className="my-2 block overflow-x-auto whitespace-pre-wrap rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-xs leading-relaxed text-emerald-400">
                                   {children}
                                 </code>
                               ) : (
-                                <pre className="bg-slate-800 text-slate-50 p-3 rounded-lg overflow-x-auto my-2">
-                                  <code className="font-mono text-xs">{children}</code>
-                                </pre>
-                              )
-                            ),
-                            p: ({ children }) => <p className="my-1 break-words">{children}</p>,
+                                <code className="rounded bg-slate-200 px-1.5 py-0.5 font-mono text-[0.85em] text-slate-800">
+                                  {children}
+                                </code>
+                              );
+                            },
+                            pre: ({ children }) => <>{children}</>,
+                            p: ({ children }) => <p className="my-1.5 break-words">{children}</p>,
                             li: ({ children }) => <li className="my-1 break-words">{children}</li>,
-                            ul: ({ children }) => <ul className="list-disc list-inside my-1">{children}</ul>,
+                            ul: ({ children }) => <ul className="my-1.5 list-disc pl-5">{children}</ul>,
+                            ol: ({ children }) => <ol className="my-1.5 list-decimal pl-5">{children}</ol>,
                           }}
                         >
                           {msg.content}
@@ -419,8 +442,8 @@ export function AIReview() {
 
             {isGenerating && (
               <div className="flex gap-3 animate-in fade-in">
-                <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-5 h-5 text-purple-600" />
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-5 h-5 text-blue-600" />
                 </div>
                 <div className="bg-slate-100 rounded-lg rounded-bl-none px-4 py-3 flex items-center gap-2">
                   <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
@@ -442,12 +465,12 @@ export function AIReview() {
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Ask about this file..."
                 disabled={isGenerating}
-                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent text-sm disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-400/30 focus:border-transparent text-sm disabled:opacity-50"
               />
               <Button
                 type="submit"
                 disabled={isGenerating || !inputMessage.trim()}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg disabled:opacity-50 transition-all"
+                className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg disabled:opacity-50 transition-all"
               >
                 {isGenerating ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

@@ -43,3 +43,6 @@ release/
 
 test-ai.cjs
 test-repo/
+
+# Archives / derived bundles
+*.zip

@@ -41,29 +41,26 @@ export function SystemStatus() {
     return <XCircle className="w-2.5 h-2.5" />;
   };
 
+  const pillClass = (status: 'running' | 'not_running' | 'loading') =>
+    `flex items-center gap-1.5 rounded-md border-none px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide transition-colors ${
+      status === 'running'
+        ? 'bg-emerald-50 text-emerald-700'
+        : status === 'loading'
+          ? 'bg-slate-100 text-slate-400'
+          : 'bg-red-50 text-red-700'
+    }`;
+
   return (
     <div className="flex items-center gap-2">
-      <Badge
-        variant="outline"
-        className={`px-2 py-0.5 rounded-full border-none flex items-center gap-1.5 transition-colors ${
-          dockerStatus === 'running' ? 'bg-green-50 text-green-700' :
-          dockerStatus === 'loading' ? 'bg-slate-50 text-slate-400' : 'bg-red-50 text-red-700'
-        }`}
-      >
-        <Container className="w-3 h-3" />
-        <span className="text-[10px] font-bold uppercase tracking-wider">Docker</span>
+      <Badge variant="outline" className={pillClass(dockerStatus)}>
+        <Container className="h-3 w-3" />
+        <span>Docker</span>
         <StatusDot status={dockerStatus} />
       </Badge>
 
-      <Badge
-        variant="outline"
-        className={`px-2 py-0.5 rounded-full border-none flex items-center gap-1.5 transition-colors ${
-          ollamaStatus === 'running' ? 'bg-purple-50 text-purple-700' :
-          ollamaStatus === 'loading' ? 'bg-slate-50 text-slate-400' : 'bg-red-50 text-red-700'
-        }`}
-      >
-        <BrainCircuit className="w-3 h-3" />
-        <span className="text-[10px] font-bold uppercase tracking-wider">Llama 3.2</span>
+      <Badge variant="outline" className={pillClass(ollamaStatus)}>
+        <BrainCircuit className="h-3 w-3" />
+        <span>Llama 3.2</span>
         <StatusDot status={ollamaStatus} />
       </Badge>
     </div>

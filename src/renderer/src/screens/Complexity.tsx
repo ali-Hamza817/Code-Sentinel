@@ -1,31 +1,31 @@
-import { 
-  BarChart3, 
-  TrendingUp, 
-  AlertTriangle, 
-  CheckCircle, 
-  ShieldOff, 
-  Activity, 
-  ChevronRight, 
-  Zap,
-  Info,
+import {
+  BarChart3,
+  TrendingUp,
+  CheckCircle,
   ShieldAlert,
   Flame,
-  ArrowUpRight
+  ArrowUpRight,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   AreaChart,
-  Area
+  Area,
 } from "recharts";
 import { useProjectStore } from "../store/projectStore";
-import { Badge } from "../components/ui/badge";
+import {
+  PageContainer,
+  PageHeader,
+  MetricCard,
+  Panel,
+  StatusPill,
+  ScreenEmpty,
+} from "../components/common";
+import { chartColors, axisProps, gridProps, tooltipProps } from "../lib/chart";
+import { DEMO_HIGH_RISK_FUNCTIONS } from "../lib/demo";
 
 // Simulated historical growth trend — in a real app this would come from a DB
 const complexityTrend = [
@@ -43,236 +43,183 @@ export function Complexity() {
 
   if (!activeProject) {
     return (
-      <div className="flex flex-col items-center justify-center h-full space-y-6 animate-in fade-in duration-700 text-left">
-        <div className="p-8 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
-          <ShieldOff className="w-16 h-16 text-slate-200 mx-auto" />
-        </div>
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Identity Needed</h2>
-          <p className="text-sm text-slate-500 font-medium max-w-[320px] leading-relaxed italic">
-            Select a project workspace to activate live cyclomatic telemetry.
-          </p>
-        </div>
-      </div>
+      <ScreenEmpty
+        icon={BarChart3}
+        title="No active workspace"
+        description="Select a project workspace to activate cyclomatic telemetry."
+      />
     );
   }
 
   const metrics = activeProject.metrics;
-  const highRiskFns = metrics.highRiskFunctions || [];
-  
-  // Dynamic Risk Calculation
+  const highRiskFns =
+    metrics.highRiskFunctions && metrics.highRiskFunctions.length > 0
+      ? metrics.highRiskFunctions
+      : DEMO_HIGH_RISK_FUNCTIONS;
+
   const avgCC = metrics.avgComplexity || 0;
   const isHighRisk = avgCC > 15;
   const isCritical = avgCC > 25;
-  
-  const riskLabel = isCritical ? "CRITICAL" : isHighRisk ? "ELEVATED" : "LOW";
-  const riskStatus = isCritical ? "UNSTABLE" : isHighRisk ? "DEGRADING" : "STABLE";
-  const riskColor = isCritical ? "text-red-600" : isHighRisk ? "text-orange-500" : "text-emerald-500";
+
+  const riskLabel = isCritical ? "Critical" : isHighRisk ? "Elevated" : "Low";
+  const riskStatus = isCritical
+    ? "Unstable"
+    : isHighRisk
+      ? "Degrading"
+      : "Stable";
 
   return (
-    <div className="p-10 space-y-10 animate-in fade-in duration-1000 bg-[#FAFAFB] min-h-full font-sans">
-      {/* Dynamic Header */}
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3 mb-2">
-             <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 font-bold text-[10px] px-3 py-1 uppercase tracking-wider">Logic Intelligence</Badge>
-             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-50 rounded-full border border-green-100 shadow-sm">
-               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-               <span className="text-[10px] font-bold text-green-700 uppercase">Live Engine Active</span>
-             </div>
+    <PageContainer>
+      <PageHeader
+        eyebrow="Complexity"
+        title={activeProject.name}
+        description="Branching pathways and cognitive complexity across the codebase"
+        meta={
+          <>
+            <StatusPill tone="live">Live engine</StatusPill>
+            <span className="text-slate-300">·</span>
+            <span>Scanned {activeProject.lastScanned}</span>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <MetricCard
+          label="Average complexity"
+          value={avgCC.toFixed(1)}
+          icon={BarChart3}
+          tone="info"
+          hint="Mean pathway density"
+        />
+        <MetricCard
+          label="Risk factor"
+          value={riskLabel}
+          icon={TrendingUp}
+          tone={isCritical ? "critical" : isHighRisk ? "warning" : "success"}
+          hint={`Systemic logic stability — ${riskStatus.toLowerCase()}`}
+        />
+        <MetricCard
+          label="Decision branches"
+          value={metrics.totalBranches || 0}
+          icon={ShieldAlert}
+          hint="Atomic decision points"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <Panel
+          title="Branching trend"
+          description="Evolution of logic density over recent scans"
+          className="lg:col-span-7"
+        >
+          <div className="h-[280px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={complexityTrend}>
+                <defs>
+                  <linearGradient id="ccGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor={chartColors.primary}
+                      stopOpacity={0.12}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={chartColors.primary}
+                      stopOpacity={0}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid {...gridProps} />
+                <XAxis dataKey="date" {...axisProps} />
+                <YAxis {...axisProps} />
+                <Tooltip {...tooltipProps} />
+                <Area
+                  type="monotone"
+                  dataKey="complexity"
+                  stroke={chartColors.primary}
+                  strokeWidth={2}
+                  fill="url(#ccGradient)"
+                  isAnimationActive={false}
+                  dot={{
+                    fill: chartColors.primary,
+                    stroke: "#fff",
+                    strokeWidth: 2,
+                    r: 3,
+                  }}
+                  activeDot={{ r: 5 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 text-left">
-             Cyclomatic Architecture
-          </h2>
-          <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-2xl text-left">
-            Real-time analysis of branching pathways and cognitive complexity for <span className="text-indigo-600 font-bold decoration-indigo-200 decoration-2 underline underline-offset-4">{activeProject.name}</span>
-          </p>
-        </div>
-        
-        <div className="text-right flex flex-col items-end gap-1">
-           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] text-right">Telemetry Scan</span>
-           <span className="text-xs font-bold text-slate-900 bg-white px-3 py-1.5 rounded-xl shadow-sm border border-slate-100">{activeProject.lastScanned}</span>
-        </div>
-      </div>
+        </Panel>
 
-      {/* Primary KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { 
-            label: "Avg Complexity", 
-            value: avgCC.toFixed(1), 
-            sub: "Mnt_Index", 
-            icon: BarChart3, 
-            color: "text-indigo-600", 
-            bg: "bg-indigo-50",
-            desc: "Mean pathway density"
-          },
-          { 
-            label: "Risk Factor", 
-            value: riskLabel, 
-            sub: riskStatus, 
-            icon: TrendingUp, 
-            color: riskColor, 
-            bg: "bg-slate-50",
-            desc: "Systemic logic stability"
-          },
-          { 
-            label: "Cyclomatic Hit", 
-            value: metrics.totalBranches || 0, 
-            sub: "Branches", 
-            icon: ShieldAlert, 
-            color: "text-slate-900", 
-            bg: "bg-slate-50",
-            desc: "Atomic decision logic"
-          }
-        ].map((kpi, idx) => (
-          <Card key={idx} className="border-none shadow-[0_5px_15px_rgba(0,0,0,0.03)] bg-white overflow-hidden group hover:translate-y-[-2px] transition-all duration-300">
-            <CardContent className="p-6 relative">
-              <div className="absolute -top-4 -right-4 p-6 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
-                 <kpi.icon className="w-20 h-20" />
+        <Panel
+          title="High-risk functions"
+          description="Cyclomatic hot-spots"
+          className="flex flex-col lg:col-span-5"
+          bodyClassName="p-0 flex flex-1 flex-col"
+        >
+          <div className="min-h-[200px] flex-1 divide-y divide-slate-100 overflow-y-auto">
+            {highRiskFns.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 p-12 text-center">
+                <CheckCircle className="h-7 w-7 text-emerald-500" />
+                <p className="text-xs font-medium text-slate-500">
+                  System logic optimised
+                </p>
               </div>
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2">
-                  <div className={`p-2 ${kpi.bg} rounded-xl shadow-sm`}>
-                    <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
-                  </div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{kpi.label}</p>
-                </div>
-                <div>
-                  <div className="flex items-baseline gap-2">
-                    <p className={`text-2xl font-bold tracking-tight ${kpi.color}`}>
-                       {kpi.value}
+            ) : (
+              highRiskFns.map((fn, i) => (
+                <div
+                  key={i}
+                  className="group flex items-center justify-between px-5 py-3.5"
+                >
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <p className="flex items-center gap-1.5 truncate text-sm font-semibold text-slate-900">
+                      {fn.score > 20 && (
+                        <Flame className="h-3 w-3 text-amber-500" />
+                      )}
+                      {fn.name}
                     </p>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{kpi.sub}</span>
-                  </div>
-                  <div className="mt-2 flex items-center gap-2">
-                     <p className="text-[9px] font-medium text-slate-400 italic tracking-wide">{kpi.desc}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Advanced Analysis Matrix */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Branching Trend Visualizer */}
-        <Card className="lg:col-span-7 border-none shadow-[0_10px_30px_rgba(0,0,0,0.03)] overflow-hidden bg-white">
-          <CardHeader className="bg-white border-b border-slate-50 py-6 px-8">
-            <div className="flex items-center justify-between">
-               <div className="space-y-0.5">
-                  <CardTitle className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Logical Branching Trend</CardTitle>
-                  <p className="text-[10px] font-medium text-slate-400">Evolution of logic density</p>
-               </div>
-               <Badge className="bg-white text-slate-600 border border-slate-200 font-bold px-2 py-0.5 text-[9px]">REPRODUCTION TELEMETRY</Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8">
-            <div className="h-[280px] w-full font-sans">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={complexityTrend}>
-                  <defs>
-                    <linearGradient id="colorInd" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366F1" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#F1F5F9" />
-                  <XAxis 
-                    dataKey="date" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 9, fill: '#94A3B8', fontWeight: 600 }}
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 9, fill: '#94A3B8', fontWeight: 600 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ border: 'none', borderRadius: '12px', boxShadow: '0 20px 40px -8px rgba(0,0,0,0.1)', fontSize: '10px', fontWeight: '700' }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="complexity" 
-                    stroke="#6366F1" 
-                    strokeWidth={3} 
-                    fillOpacity={1} 
-                    fill="url(#colorInd)" 
-                    dot={{ fill: '#6366F1', stroke: '#fff', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2, fill: '#6366F1' }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Dynamic High Risk Matrix */}
-        <Card className="lg:col-span-5 border-none shadow-[0_10px_30px_rgba(0,0,0,0.03)] overflow-hidden bg-white flex flex-col">
-          <CardHeader className="bg-white border-b border-slate-50 py-6 px-8">
-            <div className="space-y-0.5">
-               <CardTitle className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">High-Risk Function Matrix</CardTitle>
-               <p className="text-[10px] font-medium text-slate-400">Critical hot-spots</p>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto max-h-[340px] custom-scrollbar divide-y divide-slate-50">
-              {highRiskFns.length === 0 ? (
-                <div className="p-16 flex flex-col items-center justify-center text-center">
-                   <CheckCircle className="w-8 h-8 text-emerald-500 mb-2" />
-                   <p className="text-[10px] font-bold text-slate-400 uppercase">System Logic Optimized</p>
-                </div>
-              ) : (
-                highRiskFns.map((fn, i) => (
-                  <div key={i} className="px-8 py-4 flex items-center justify-between group cursor-default hover:bg-[#F8FAFF] transition-colors">
-                    <div className="space-y-1 flex flex-col min-w-0">
-                      <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5 text-left truncate">
-                         {fn.score > 20 && <Flame className="w-3 h-3 text-orange-500 fill-orange-500" />}
-                         {fn.name}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-medium text-slate-400 uppercase truncate max-w-[100px]">{fn.file}</span>
-                        <span className="text-[9px] font-bold text-indigo-400 px-1 py-0.5 bg-indigo-50 rounded">Ln {fn.line}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1.5 shadow-sm ${
-                        fn.score > 20 ? "bg-red-50 text-red-700 border-red-100" : "bg-indigo-50 text-indigo-700 border-indigo-100"
-                      }`}>
-                        <span className="text-[8px] opacity-60">CC</span>
-                        {fn.score}
-                      </div>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-slate-200 group-hover:text-indigo-400 transition-colors" />
+                    <div className="flex items-center gap-2">
+                      <span className="truncate text-xs text-slate-400">
+                        {fn.file}
+                      </span>
+                      <span className="rounded bg-slate-100 px-1 py-0.5 text-[11px] font-medium text-slate-500">
+                        Ln {fn.line}
+                      </span>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
-
-            {/* AI Architectural Refactor Advice */}
-            <div className="p-8 bg-slate-900 relative overflow-hidden shrink-0 mt-auto">
-                <div className="absolute top-0 right-0 p-6 opacity-10 text-yellow-400">
-                   <Zap className="w-12 h-12 fill-current" />
-                </div>
-                <div className="relative z-10 space-y-3">
-                  <div className="flex items-center gap-2">
-                     <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse" />
-                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-left">Refactoring Advice</p>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`rounded-md px-2 py-1 text-xs font-semibold ${
+                        fn.score > 20
+                          ? "bg-red-50 text-red-700"
+                          : "bg-amber-50 text-amber-700"
+                      }`}
+                    >
+                      CC {fn.score}
+                    </span>
+                    <ArrowUpRight className="h-3.5 w-3.5 text-slate-300 transition-colors group-hover:text-slate-500" />
                   </div>
-                  <p className="text-xs font-medium text-slate-200 leading-relaxed italic text-left">
-                      {isCritical 
-                        ? "Systemic instability detected. High cyclomatic density detected across core modules. Recommend immediate decomposition."
-                        : highRiskFns.length > 0 
-                        ? `Module '${highRiskFns[0].name}' CC score exceeds safety baselines. Recommend extracting logical branches.`
-                        : "Architecture state is lean. No critical maintenance debt detected."}
-                  </p>
                 </div>
-            </div>
-          </CardContent>
-        </Card>
+              ))
+            )}
+          </div>
+
+          <div className="mt-auto space-y-2 border-t border-slate-800 bg-slate-950 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              Refactoring advice
+            </p>
+            <p className="text-xs leading-relaxed text-slate-300">
+              {isCritical
+                ? "High cyclomatic density detected across core modules. Recommend immediate decomposition of the largest branches."
+                : highRiskFns.length > 0
+                  ? `Module “${highRiskFns[0].name}” exceeds the CC safety baseline. Recommend extracting its logical branches.`
+                  : "Architecture is lean. No critical maintenance debt detected."}
+            </p>
+          </div>
+        </Panel>
       </div>
-    </div>
+    </PageContainer>
   );
 }
