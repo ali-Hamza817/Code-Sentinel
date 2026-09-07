@@ -2,16 +2,16 @@
   \centering
   \begin{tikzpicture}[
       font=\footnotesize,
-      node distance=6mm,
+      node distance=5mm,
       stage/.style={rounded corners=3pt, draw=csslate!45, fill=csgraybg,
-                    line width=0.6pt, minimum height=9mm, minimum width=20mm,
-                    align=center, inner sep=4pt},
+                    line width=0.6pt, minimum height=9mm, minimum width=17mm,
+                    align=center, inner sep=3pt},
       ana/.style={rounded corners=3pt, draw=csblue!45, fill=csbluebg,
-                  line width=0.6pt, minimum height=8mm, minimum width=30mm,
-                  align=center, inner sep=3pt, font=\scriptsize},
-      out/.style={rounded corners=3pt, draw=csgreen!50, fill=csgreenbg,
-                  line width=0.6pt, minimum height=9mm, minimum width=20mm,
-                  align=center, inner sep=4pt},
+                  line width=0.6pt, minimum height=8mm, minimum width=27mm,
+                  align=center, inner sep=2pt, font=\scriptsize},
+      res/.style={rounded corners=3pt, draw=csgreen!50, fill=csgreenbg,
+                  line width=0.6pt, minimum height=9mm, minimum width=17mm,
+                  align=center, inner sep=3pt},
       fl/.style={-{Stealth[length=2mm]}, draw=csslate!60, line width=0.8pt},
     ]
 
@@ -19,14 +19,14 @@
     \node[stage, right=of repo] (inv) {File\\inventory};
 
     % parallel analyses
-    \node[ana, right=14mm of inv, yshift=10mm]  (pat) {Pattern scan\\\scriptsize(rules, CWE)};
-    \node[ana, right=14mm of inv]               (cx)  {Complexity engine\\\scriptsize(McCabe $CC$)};
-    \node[ana, right=14mm of inv, yshift=-10mm] (llm) {LLM review\\\scriptsize(Llama 3.2, schema)};
+    \node[ana, right=11mm of inv, yshift=9mm]  (pat) {Pattern scan\\\scriptsize(rules, CWE)};
+    \node[ana, right=11mm of inv]              (cx)  {Complexity engine\\\scriptsize(McCabe $CC$)};
+    \node[ana, right=11mm of inv, yshift=-9mm] (llm) {LLM review\\\scriptsize(Llama 3.2, schema)};
 
-    \node[stage, right=14mm of cx] (fuse) {Finding\\fusion};
+    \node[stage, right=11mm of cx] (fuse) {Finding\\fusion};
     \node[stage, right=of fuse]    (dyn)  {Dynamic\\sandbox};
     \node[stage, right=of dyn]     (risk) {Risk\\model};
-    \node[out,   right=of risk]    (rep)  {Report\\\scriptsize PDF / JSON};
+    \node[res, right=of risk]      (rep)  {Report\\\scriptsize PDF / JSON};
 
     \draw[fl] (repo) -- (inv);
     \draw[fl] (inv.east) -- (pat.west);

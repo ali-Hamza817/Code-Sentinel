@@ -5,10 +5,13 @@ Large-Language-Model-Assisted Static and Dynamic Source-Code Security
 Auditing."*
 
 - **Format:** IEEE conference, two columns (`\documentclass[conference]{IEEEtran}`).
-- **Bibliography:** `biblatex` + `biber`, IEEE style — citations, cross-references,
-  and URLs are all clickable (via `hyperref` + `cleveref`).
+- **Bibliography:** classic `\bibliographystyle{IEEEtran}` + BibTeX (numbered
+  `[n]` references). Citations, cross-references and URLs are all clickable
+  (via `hyperref` + `cleveref`).
 - **Figures:** three vector diagrams in TikZ (`figures/diagrams/`) plus the
   product screenshots (`figures/screens/`).
+- **`main.pdf` in this folder** is a reference build produced with TeX Live 2026
+  (`pdflatex` + `bibtex`) — the same toolchain Overleaf runs. 11 pages.
 
 ## Folder layout
 
@@ -37,11 +40,13 @@ research-paper/
 
 ```bash
 cd research-paper
-latexmk -pdf main.tex        # runs pdflatex + biber + pdflatex ×2
-# or:  pdflatex main  &&  biber main  &&  pdflatex main  &&  pdflatex main
+latexmk -pdf main.tex        # pdflatex + bibtex + pdflatex ×2
+# or:  pdflatex main  &&  bibtex main  &&  pdflatex main  &&  pdflatex main
 ```
 
-Output: `main.pdf`.
+Output: `main.pdf`. Needs a TeX distribution with `IEEEtran`, `pgf/tikz`,
+`biblatex`-free `IEEEtran.bst`, `hyperref`, `cleveref`, `subcaption`,
+`makecell`, `stfloats` (all in a full TeX Live).
 
 ## Build on Overleaf
 
@@ -49,14 +54,19 @@ Output: `main.pdf`.
 2. Overleaf → **New Project → Upload Project** → select the zip.
 3. **Menu → Settings**: Compiler = **pdfLaTeX**, TeX Live = a recent
    version. Main document = `main.tex`.
-4. Recompile. Overleaf runs `biber` automatically for the bibliography.
+4. Recompile. Overleaf runs `bibtex` automatically for the bibliography
+   (you may need to recompile once more so all `[n]` citations resolve).
 
 ## Before submission
 
 - The author block in `main.tex` has `[Institution]` / `[City, Country]` /
   `[author email]` placeholders — fill these in.
 - `references.bib` carries a note: re-verify page ranges and DOIs against
-  the publisher of record.
+  the publisher of record. If the target venue requires `biblatex`, switch
+  the two bibliography lines in `main.tex` back to
+  `\usepackage[style=ieee,backend=biber]{biblatex}` /
+  `\addbibresource{references.bib}` / `\printbibliography` and set the
+  Overleaf compiler bibliography engine to Biber.
 - The `Use of generative AI` paragraph in `sections/declarations.tex`
   discloses AI drafting assistance; keep or adapt it to the target venue's
   policy.

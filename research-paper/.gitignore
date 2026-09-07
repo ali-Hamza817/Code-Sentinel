@@ -1,0 +1,14 @@
+# LaTeX build artefacts (main.pdf is intentionally committed as a reference build)
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.xdv
+*.run.xml
+*.bcf
+pg-*.png
