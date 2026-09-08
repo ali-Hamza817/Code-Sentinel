@@ -1,0 +1,111 @@
+\begin{table*}[!tbp]
+  \centering
+  \caption{The evolution of automated code security analysis: what each
+           line of work advanced, and the limitation it left open.}
+  \label{tab:litreview}
+  \renewcommand{\arraystretch}{1.25}
+  \small
+  \begin{tabularx}{\textwidth}{@{}p{0.20\textwidth} X X@{}}
+    \toprule
+    \textbf{Study / system} & \textbf{Advance and key findings} &
+    \textbf{Limitation left open} \\
+    \midrule
+
+    FindBugs; bug patterns \cite{ayewah2008} &
+      Simple syntactic patterns find real defects at very low cost;
+      established automated inspection as worthwhile. &
+      Local patterns cannot follow a tainted value across
+      procedures; shallow coverage of semantic bugs. \\
+
+    Coverity at scale \cite{bessey2010} &
+      Inter-procedural analysis runs on $10^8$-line industrial
+      codebases and finds serious defects in the field. &
+      Heavy deployment effort; false-positive triage becomes a
+      product in itself. \\
+
+    Infer / compositional analysis \cite{distefano2019} &
+      Compositional summaries make deep analysis scale and fit CI. &
+      Targets specific bug classes; still rule-/spec-bound. \\
+
+    Developer studies \cite{johnson2013,nachtigall2022} &
+      Identify \emph{why} SAST is abandoned: out-of-context results,
+      noise, poor workflow fit. &
+      Diagnose the adoption problem but propose no tool. \\
+
+    Code property graphs \cite{yamaguchi2014} &
+      Represent code as a graph so a vulnerability is a query;
+      reusable across a codebase. &
+      Requires expert query authoring for each weakness class. \\
+
+    CodeQL \cite{avgustinov2016} &
+      Declarative, shareable security queries with a community
+      library. &
+      A rule encodes a pattern the author anticipated; cannot infer
+      intent. \\
+
+    Cyclomatic complexity;
+    Maintainability Index \cite{mccabe1976,coleman1994} &
+      A structural-health scalar that correlates with defect density
+      and test effort. &
+      A number does not localise or explain a vulnerability. \\
+
+    Fuzzing survey \cite{manes2021} &
+      Execution finds bugs static analysis misses; now the dominant
+      automated technique for native code. &
+      Needs harnesses and time; weak coverage of business logic. \\
+
+    Codex / LLMs for code \cite{chen2021codex} &
+      Models trained on code reason about \emph{intent}, not just
+      syntax. &
+      General-purpose, not security-tuned; capable variants are
+      hosted only. \\
+
+    Copilot / ChatGPT code security
+    \cite{pearce2022,khoury2023} &
+      Quantify how often assistant-\emph{generated} code is
+      insecure. &
+      Evaluate the generation side, not a defensive analysis tool;
+      prompts still leave the machine. \\
+
+    Devign; LineVul
+    \cite{zhou2019devign,fu2022linevul} &
+      Learned models predict vulnerable functions / lines directly. &
+      Accuracy tied to noisy datasets; weak cross-project
+      generalisation. \\
+
+    Zero-shot vulnerability repair \cite{pearce2023} &
+      A capable LLM can repair vulnerabilities with no
+      task-specific training. &
+      Needs a frontier (hosted) model; unreliable without an oracle. \\
+
+    Data-quality critiques
+    \cite{steenhoek2023,croft2023} &
+      Show DL vulnerability-detection results are inflated by
+      label/duplication issues. &
+      Argue against trusting a verdict; motivate human-in-the-loop. \\
+
+    Prompt injection; OWASP LLM Top~10
+    \cite{perez2022ignore,greshake2023,owaspllm2025} &
+      Define a new weakness class (direct and retrieval-borne) that
+      analysers must now cover. &
+      RAG systems \cite{lewis2020rag} are especially exposed; the
+      analysis target itself has moved. \\
+
+    Open quantised models; Ollama
+    \cite{touvron2023llama,touvron2023llama2,ollama} &
+      Multi-billion-parameter models run on a laptop at interactive
+      speed. &
+      Smaller than frontier models; recall of subtle,
+      cross-function bugs is lower. \\
+
+    \midrule
+    \textbf{\cs\ (this work)} &
+      Runs pattern SAST, complexity metrics, an on-device
+      \mbox{Llama~3.2} reviewer, and a container sandbox together
+      behind one interface and one transparent score, with a hard
+      no-egress boundary. &
+      Trades frontier-model scale for locality; the model is kept
+      advisory and corroborated by deterministic rules. \\
+    \bottomrule
+  \end{tabularx}
+\end{table*}

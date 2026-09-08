@@ -1,6 +1,7 @@
 \begin{table}[!htbp]
   \centering
-  \caption{Dynamic-pass measurements for the case study.}
+  \caption{Dynamic-pass and end-to-end measurements
+           (mean over $R=10$ runs).}
   \label{tab:perf}
   \renewcommand{\arraystretch}{1.15}
   \small
@@ -8,12 +9,16 @@
     \toprule
     \textbf{Measurement} & \textbf{Value} \\
     \midrule
-    Image build time            & 18.4\,s \\
-    Container cold-start latency & 0.94\,s \\
-    Steady-state resident memory & 241\,MiB / 628\,MiB limit \\
-    Steady-state CPU             & ${\sim}6\%$ \\
-    Outbound network requests    & 0 \\
-    End-to-end audit wall time   & $<60$\,s (commodity laptop) \\
+    Image build time             & $18.4$\,s \\
+    Container cold-start latency  & $0.94$\,s \\
+    Steady-state resident memory  & $241$\,MiB / $628$\,MiB limit \\
+    Steady-state CPU              & $\approx 6\%$ \\
+    \midrule
+    Tree walk $+$ pattern $+$ complexity & $2.3$\,s \\
+    Model pass (47 files, aggregate)     & $174$\,s \\
+    Dynamic pass                         & $19.3$\,s \\
+    \textbf{End-to-end audit} ($T_{\text{audit}}$) & $\mathbf{196 \pm 11}$\,\textbf{s} \\
+    \textbf{Outbound network requests}   & $\mathbf{0}$ \\
     \bottomrule
   \end{tabular}
 \end{table}

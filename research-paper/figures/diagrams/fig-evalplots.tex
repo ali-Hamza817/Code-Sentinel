@@ -1,0 +1,74 @@
+\begin{figure*}[!tbp]
+  \centering
+  %% -------- left: per-file model latency vs input length --------
+  \begin{subfigure}{0.47\textwidth}
+    \centering
+    \begin{tikzpicture}[x=0.0052cm, y=0.46cm, font=\footnotesize]
+      % axes
+      \draw[->,csslate!70] (0,0) -- (980,0)
+        node[right,font=\scriptsize] {$L_f$ (tokens)};
+      \draw[->,csslate!70] (0,0) -- (0,9.6)
+        node[above,font=\scriptsize] {$T_{\text{llm}}$ (s)};
+      \foreach \x in {200,400,600,800}
+        \draw[csslate!40] (\x,0) -- (\x,-0.18)
+          node[below,font=\scriptsize] {\x};
+      \foreach \y in {2,4,6,8}
+        \draw[csslate!40] (0,\y) -- (-14,\y)
+          node[left,font=\scriptsize] {\y};
+      % fit line  T = 0.83 + 0.0069 L
+      \draw[csred,line width=0.9pt] (0,0.83) -- (960,7.45);
+      % observations
+      \foreach \p in {%
+        (120,1.9),(180,2.1),(230,2.7),(300,3.0),(340,3.6),(380,2.9),
+        (420,3.7),(470,4.3),(520,3.9),(600,5.4),(700,5.0),(760,6.2),
+        (830,7.1),(890,6.7)}
+        \node[circle,fill=csblue,inner sep=1.1pt] at \p {};
+      \node[anchor=north west,font=\scriptsize,color=csslate]
+        at (60,9.3) {$T_{\text{llm}} = 0.83 + 6.9\text{e-}3\,L_f$,\ \ $R^2=0.94$};
+    \end{tikzpicture}
+    \caption{Per-file model latency vs.\ input length
+             (\cref{eq:tllm}).}
+    \label{fig:latency}
+  \end{subfigure}\hfill
+  %% -------- right: Project Health Index vs n_sev --------
+  \begin{subfigure}{0.47\textwidth}
+    \centering
+    \begin{tikzpicture}[x=0.40cm, y=0.043cm, font=\footnotesize]
+      % risk bands
+      \fill[csredbg]   (0,0)  rectangle (12,50);
+      \fill[csamberbg] (0,50) rectangle (12,80);
+      \fill[csgreenbg] (0,80) rectangle (12,100);
+      \node[font=\scriptsize,color=csred,anchor=west]   at (0.3,25)  {critical};
+      \node[font=\scriptsize,color=csamber,anchor=west] at (0.3,65)  {moderate};
+      \node[font=\scriptsize,color=csgreen,anchor=west] at (0.3,90)  {low};
+      % axes
+      \draw[->,csslate!70] (0,0) -- (12.6,0)
+        node[right,font=\scriptsize] {$n_{\text{sev}}$};
+      \draw[->,csslate!70] (0,0) -- (0,106)
+        node[above,font=\scriptsize] {$H$};
+      \foreach \x in {0,2,4,6,8,10,12}
+        \draw[csslate!40] (\x,0) -- (\x,-3) node[below,font=\scriptsize] {\x};
+      \foreach \y in {25,50,75,100}
+        \draw[csslate!40] (0,\y) -- (-0.25,\y) node[left,font=\scriptsize] {\y};
+      % H(n) for CCbar = 7.8, a = 1
+      \draw[csblue,line width=1pt]
+        (0,87)--(1,82)--(2,77)--(3,72)--(4,67)--(5,62)--(6,57)
+        --(7,52)--(8,47)--(9,42)--(10,37)--(12,37);
+      % case-study point
+      \fill[csink] (6,57) circle[radius=2pt];
+      \node[anchor=south west,font=\scriptsize,color=csink] at (6.2,58) {$H=57$};
+      % band-crossing at n_sev = 7.46
+      \draw[csslate,dashed] (7.46,0) -- (7.46,50);
+      \node[anchor=north,font=\scriptsize,color=csslate] at (7.46,-9)
+        {\;$H<50$};
+    \end{tikzpicture}
+    \caption{\phindex\ vs.\ $n_{\text{sev}}$ for the case-study slice
+             ($\overline{CC}=7.8$, $a=1$).}
+    \label{fig:sensitivity}
+  \end{subfigure}
+  \caption{Operational characterisation. Left: the model pass is affine
+           in file length. Right: the composite score is piecewise-linear
+           in the qualifying-finding count, and the case study sits two
+           findings above the critical band.}
+  \label{fig:evalplots}
+\end{figure*}

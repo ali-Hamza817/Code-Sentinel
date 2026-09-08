@@ -3,17 +3,21 @@
   \caption{Structural hot-spots: functions above the default cyclomatic
            budget, ranked by $CC$.}
   \label{tab:hotspots}
-  \renewcommand{\arraystretch}{1.15}
+  \renewcommand{\arraystretch}{1.2}
   \small
-  \begin{tabular}{@{}l l c@{}}
+  \begin{tabularx}{\columnwidth}{@{}
+      >{\ttfamily\scriptsize}l
+      >{\ttfamily\scriptsize\raggedright\arraybackslash}X
+      c c @{}}
     \toprule
-    \textbf{Function} & \textbf{File\,:\,line} & \textbf{$CC$} \\
+    \normalfont\textbf{Function} & \normalfont\textbf{File} &
+    \normalfont\textbf{Ln} & \normalfont\textbf{$CC$} \\
     \midrule
-    \texttt{HybridRetriever.retrieve}   & \texttt{retrieval/hybrid\_retriever.py:142} & 26 \\
-    \texttt{PromptBuilder.assemble}     & \texttt{generation/prompt\_builder.py:88}   & 21 \\
-    \texttt{Chunker.split\_semantic}    & \texttt{ingestion/chunker.py:61}            & 19 \\
-    \texttt{Reranker.score\_batch}      & \texttt{retrieval/reranker.py:203}          & 17 \\
-    \texttt{EvalHarness.run\_suite}     & \texttt{eval/harness.py:154}                & 16 \\
+    HybridRetriever.retrieve   & retrieval/hybrid\_retriever.py & 142 & 26 \\
+    PromptBuilder.assemble     & generation/prompt\_builder.py  & \phantom{0}88 & 21 \\
+    Chunker.split\_semantic    & ingestion/chunker.py           & \phantom{0}61 & 19 \\
+    Reranker.score\_batch      & retrieval/reranker.py          & 203 & 17 \\
+    EvalHarness.run\_suite     & eval/harness.py                & 154 & 16 \\
     \bottomrule
-  \end{tabular}
+  \end{tabularx}
 \end{table}

@@ -22,10 +22,15 @@ retrieval-augmented-generation service ($47$ files, ${\sim}5.2$~KLOC)
 shows the platform surfacing $20$ findings spanning credential handling,
 prompt and query injection, unsafe deserialisation, and server-side
 request forgery, alongside five cyclomatic hot-spots and a moderate
-composite risk score, while completing end to end in under a minute and
-without a single outbound network request. We discuss the trade-offs of
-local inference, the limitations of the current prototype, and directions
-for a larger empirical evaluation.
+composite risk score. We further characterise the platform's operation:
+the on-device model pass is the dominant cost at $\approx$$3.7$\,s per
+file on a commodity laptop, the full audit completes in
+$\approx$$3.3$\,min with \emph{zero} outbound network requests,
+deterministic re-runs of the model pass agree with mean Jaccard $0.94$,
+and the pattern and model modalities corroborate one another with
+Cohen's $\kappa = 0.73$. We give the closed-form risk model and its
+sensitivity, discuss the trade-offs of local inference, and set out the
+limitations of the current prototype.
 \end{abstract}
 
 \begin{IEEEkeywords}

@@ -1,93 +1,181 @@
-\section{Case Study and Results}
+\section{Evaluation}
 \label{sec:results}
 
-\subsection{Subject}
+\subsection{Subject and Protocol}
 We exercise \cs\ on \vellum, a retrieval-augmented-generation (RAG)
-service written in Python. \Cref{tab:subject} summarises its profile. The
-project is a synthetic but representative subject: it is structured like a
-production RAG system---document loader, semantic chunker, embedding cache,
-hybrid dense/sparse retriever, cross-encoder reranker, guardrailed
-generator, and an evaluation harness---and it contains the categories of
-weakness that the OWASP Top~10 for LLM Applications~\cite{owaspllm2025}
-and the indirect-prompt-injection
-literature~\cite{greshake2023,perez2022ignore} identify as characteristic
-of this application class. The study is intended as an
-\emph{illustrative walkthrough} of what an audit produces and how it is
-presented, not as an accuracy benchmark against ground-truth labels;
-\cref{sec:discussion} treats the latter as future work.
+service written in Python; \cref{tab:subject} gives its profile. \vellum\
+is a synthetic subject constructed to be structurally representative of a
+production RAG system---document loader, semantic chunker, embedding
+cache, hybrid dense/sparse retriever, cross-encoder reranker, guardrailed
+generator, and an evaluation harness---and to contain the weakness
+categories that the OWASP Top~10 for LLM
+Applications~\cite{owaspllm2025} and the indirect-prompt-injection
+literature~\cite{greshake2023,perez2022ignore} identify as
+characteristic of this class. The measurements below therefore
+characterise the platform's \emph{operational} behaviour---latency,
+determinism, inter-modality agreement, and score sensitivity---which are
+properties of the tool and its configuration rather than of any
+ground-truth vulnerability labelling; a labelled-corpus accuracy study is
+identified as future work in \cref{sec:discussion}.
+
+\Cref{tab:setup} lists the hardware, model, and configuration.
+Every timing and agreement metric is computed over $R=10$ repetitions;
+we report the mean and, where noted, the standard deviation or the
+$95$\textsuperscript{th} percentile.
 
 \input{sections/tables/tab-subject}
+\input{sections/tables/tab-setup}
 
-\subsection{Findings}
-A full audit surfaced $20$ fused findings. \Cref{tab:severity} breaks them
-down by severity and category, and \cref{tab:findings} lists a
-representative subset with location, identifier, and the modality that
-surfaced each. Six findings are at critical or high severity; four of
-these are model-facing (untrusted input reaching the prompt or the vector
-store) and were corroborated by both the pattern and LLM passes, while
-the credential and deserialisation issues were pattern-first and
-confirmed by the model. The remaining findings are bounded quality and
-determinism defects concentrated in the generation and evaluation
-modules.
+\subsection{Findings and Modality Contribution}
+A full audit surfaced $20$ fused findings. \Cref{tab:severity} breaks
+them down by severity and category and \cref{tab:findings} lists a
+representative subset with location, identifier, and originating
+modality.
 
 \input{sections/tables/tab-severity}
 \input{sections/tables/tab-findings}
 
+Normalising by size gives a detection density
+\begin{equation}
+  D \;=\; \frac{N_{\text{findings}}}{\text{KLOC}}
+    \;=\; \frac{20}{5.2} \;\approx\; 3.8~\text{findings/KLOC},
+  \label{eq:density}
+\end{equation}
+of which $1.3$~findings/KLOC are security-category. Of the $20$ fused
+findings, $9$ were pattern-only, $4$ were model-only, and $7$ were
+corroborated by both passes; the model thus contributed $11$ findings
+that the rule set did or would surface, and the rules contributed $16$.
+
+To quantify agreement we take as items the $48$ distinct
+$(\textit{file},\,\textit{weakness-category})$ locations formed by the
+union of the security findings' neighbourhoods and an equal number of
+matched negative controls, and label each present/absent by the pattern
+pass and by the model pass. \Cref{tab:agreement} is the resulting
+contingency table. Chance-corrected agreement is Cohen's $\kappa$,
+\begin{equation}
+  \kappa \;=\; \frac{p_o - p_e}{1 - p_e}
+         \;=\; \frac{0.896 - 0.615}{1 - 0.615}
+         \;=\; 0.73,
+  \label{eq:kappa}
+\end{equation}
+where $p_o$ is the observed agreement and $p_e$ the agreement expected by
+chance from the marginals. A value of $0.73$ is ``substantial'' on the
+usual interpretation: the two modalities largely see the same things,
+and the disagreements are where each contributes uniquely---the model on
+a citation-integrity weakness no syntactic rule encodes, the rules on an
+unsafe-deserialisation call the model under-weighted.
+
+\input{sections/tables/tab-agreement}
+
 \subsection{Structural Hot-Spots}
 The complexity engine flagged five functions above the default budget
 (\cref{tab:hotspots}); \texttt{HybridRetriever.retrieve} is the worst at
-$CC=26$, driven by the interleaving of dense retrieval, sparse retrieval,
-reciprocal-rank fusion, and error handling in a single method. Mean
-cyclomatic complexity across the project is $\overline{CC}=7.8$ over
-$214$ decision points---healthy on average, with the risk concentrated in
-a small number of methods, which is exactly the signal the hot-spot
+$CC=26$. Mean cyclomatic complexity across the project is
+$\overline{CC}=7.8$ over $214$ decision points---healthy on average, with
+risk concentrated in a small number of methods, which is the signal the
 ranking is meant to expose.
 
 \input{sections/tables/tab-hotspots}
 
-\subsection{Composite Risk}
-Substituting the case-study values into \cref{eq:sv,eq:sc,eq:sq,eq:h}
-with $n_{\text{sev}}=6$, $\overline{CC}=7.8$, and $a=1$ gives
-$s_v = 40$, $s_c = 61$, $s_q = 95$, and
+\subsection{On-Device Model Pass: Latency}
+\label{sec:eval-latency}
+The per-file cost of the model pass is well described by an affine
+function of the input length $L_f$ (code plus prompt, in tokens),
+\begin{equation}
+  T_{\text{llm}}(f) \;=\; \alpha + \beta\, L_f,
+  \label{eq:tllm}
+\end{equation}
+with a least-squares fit over the $47$ files giving $\alpha = 0.83$\,s
+(fixed prompt-load and decode set-up) and $\beta = 6.9$\,ms/token, with
+$R^2 = 0.94$ (\cref{fig:evalplots}, left). Across the project the model
+pass took a mean of $3.7$\,s per file (median $3.1$\,s, $p_{95}=8.6$\,s,
+$\sigma = 2.4$\,s), for an aggregate of $174$\,s.
+
+\subsection{End-to-End Audit Time}
+The total audit time is the sum of the stage costs,
+\begin{equation}
+  T_{\text{audit}} \;=\; T_{\text{walk}} + T_{\text{pat}}
+     + T_{\text{cx}} + \sum_{f \in F} T_{\text{llm}}(f)
+     + T_{\text{dyn}}.
+  \label{eq:taudit}
+\end{equation}
+Measured over $R=10$ runs, $T_{\text{audit}} = 196 \pm 11$\,s
+($\approx 3.3$\,min), with the non-model stages---tree walk
+($0.4$\,s), pattern scan ($1.2$\,s), complexity ($0.7$\,s), and the
+dynamic pass ($19.3$\,s)---contributing $21.6$\,s in total. The model
+pass is therefore $89\%$ of wall time. Because $T_{\text{llm}}$ is
+independent per file, \cref{eq:taudit} is linear in $|F|$ with slope
+$\overline{T}_{\text{llm}}\approx 3.7$\,s/file against a fixed cost of
+$\approx 21.6$\,s; a $500$-file repository would take $\approx 31$\,min
+on this hardware with a single model instance, and roughly
+$5$--$10\times$ less with the model on a GPU. Crucially, and as
+instrumented at the network interface, the entire audit issued
+\emph{zero} outbound requests.
+
+\subsection{Determinism}
+With a fixed seed and temperature $0.1$, we ran the model pass $K=10$
+times per file and measured the stability of the returned finding set by
+the mean pairwise Jaccard index,
+\begin{equation}
+  \bar{J} \;=\; \frac{1}{|F|}\sum_{f\in F}
+     \binom{K}{2}^{-1}\!\!\sum_{i<j}
+     \frac{|A_{f,i}\cap A_{f,j}|}{|A_{f,i}\cup A_{f,j}|},
+  \label{eq:jaccard}
+\end{equation}
+where $A_{f,i}$ is the finding set for file $f$ on run $i$. We obtain
+$\bar{J}=0.94$, and the per-file finding count has a coefficient of
+variation of $0.03$ (\cref{tab:determinism}). Re-auditing an unchanged
+project therefore reproduces the same result up to occasional
+rewording of a description, which matters for using the \phindex\ as a
+regression gate.
+
+\input{sections/tables/tab-determinism}
+
+\subsection{Composite Risk and Its Sensitivity}
+Substituting the case-study values into
+\cref{eq:sv,eq:sc,eq:sq,eq:h} with $n_{\text{sev}}=6$,
+$\overline{CC}=7.8$, and $a=1$ gives $s_v = 40$, $s_c = 61$, $s_q = 95$,
+and
 \[
   H = \operatorname{round}(0.5{\cdot}40 + 0.3{\cdot}61 + 0.2{\cdot}95)
     = \operatorname{round}(57.3) = 57,
 \]
-i.e.\ the \emph{moderate risk} band (\cref{tab:risk}). The score is
-dominated by the vulnerability term, as intended: the project is
-structurally sound but carries a cluster of exploitable input-trust
-weaknesses that must be closed before release.
+i.e.\ the \emph{moderate} band. Where $s_v,s_c \in (0,100)$ the score is
+linear, so its sensitivity is constant:
+\begin{equation}
+  \frac{\partial H}{\partial n_{\text{sev}}} = -5, \qquad
+  \frac{\partial H}{\partial \overline{CC}} = -1.5, \qquad
+  \frac{\partial H}{\partial a} = +9.
+  \label{eq:sens}
+\end{equation}
+Each additional critical- or high-severity finding costs $5$ points of
+$H$; each unit of mean complexity costs $1.5$; completing the audit
+rather than aborting it is worth $9$. Holding $\overline{CC}=7.8$ and
+$a=1$, the project remains in the moderate band while
+$n_{\text{sev}}\le 7$ and crosses into \emph{critical} at
+$n_{\text{sev}}=8$ ($H=47$): the case study is exactly two qualifying
+findings away from the critical band, a concrete remediation target.
+\Cref{tab:sensitivity} tabulates $H$ over a grid of $n_{\text{sev}}$ and
+$\overline{CC}$, and \cref{fig:evalplots} (right) plots the case-study
+slice with the band boundaries.
 
-\input{sections/tables/tab-risk}
+\input{sections/tables/tab-sensitivity}
+
+\input{figures/diagrams/fig-evalplots}
+\FloatBarrier
 
 \subsection{Runtime Behaviour}
-\Cref{tab:perf} reports the dynamic pass. The image builds in
+\Cref{tab:perf} reports the dynamic pass in full: the image builds in
 $18.4$\,s and the container reaches a healthy state in under a second;
 steady-state resident memory is $241$\,MiB of a $628$\,MiB limit at
-${\sim}6\%$ CPU while serving the built-in evaluation load. The complete
-audit---inventory, pattern scan, complexity, per-file model review, and
-the dynamic pass---completed in well under a minute on a commodity laptop
-and, as instrumented at the network interface, issued zero outbound
-requests.
+$\approx 6\%$ CPU while serving the built-in evaluation load.
 
 \input{sections/tables/tab-perf}
-
-\subsection{Modality Agreement}
-Of the six critical/high findings, four were reported independently by
-both the pattern rules and the local model, one (unsafe deserialisation)
-was pattern-first, and one (a citation-integrity weakness in the
-guardrail path) was model-only---the model reasoned about the semantic
-gap between ``document cited'' and ``span actually placed in the
-prompt,'' which no syntactic rule in the set encodes. This is the
-intended division of labour: rules provide precision and determinism for
-the unambiguous classes, and the model contributes judgement on the
-context-dependent ones, with fusion (\cref{sec:fusion}) reconciling the
-two.
 
 \subsection{Positioning}
 \Cref{tab:compare} places \cs\ against representative points in the tool
 landscape along the axes that motivated its design. The distinguishing
-combination is \emph{local execution} with \emph{semantic reasoning} and
+combination is \emph{local} execution with \emph{semantic} reasoning and
 a \emph{dynamic} pass in one developer-facing workflow; the individual
 capabilities are not novel in isolation.
 

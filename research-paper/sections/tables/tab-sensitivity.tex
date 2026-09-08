@@ -1,0 +1,26 @@
+\begin{table}[!htbp]
+  \centering
+  \caption{\phindex\ $H$ over a grid of $n_{\text{sev}}$ and
+           $\overline{CC}$ (audit complete, $a=1$). Bold = case study;
+           values below $50$ (\underline{underlined}) fall in the
+           \emph{critical} band, $50$--$79$ \emph{moderate}, $\ge 80$
+           \emph{low}.}
+  \label{tab:sensitivity}
+  \renewcommand{\arraystretch}{1.2}
+  \small
+  \begin{tabular}{@{}c c c c c@{}}
+    \toprule
+    \multirow{2}{*}{$n_{\text{sev}}$} &
+      \multicolumn{4}{c}{$\overline{CC}$} \\
+    \cmidrule(lr){2-5}
+     & $4$ & $8$ & $12$ & $16$ \\
+    \midrule
+    $0$  & 93 & 87 & 81 & 75 \\
+    $2$  & 83 & 77 & 71 & 65 \\
+    $4$  & 73 & 67 & 61 & 55 \\
+    $6$  & 63 & \textbf{57} & 51 & \underline{45} \\
+    $8$  & 53 & \underline{47} & \underline{41} & \underline{35} \\
+    $10$ & \underline{43} & \underline{37} & \underline{31} & \underline{25} \\
+    \bottomrule
+  \end{tabular}
+\end{table}

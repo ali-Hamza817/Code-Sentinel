@@ -1,85 +1,103 @@
 \section{Background and Related Work}
 \label{sec:related}
 
-\subsection{Static Analysis for Security}
-Static analysis reasons about a program without running it. Security-oriented
-analysers range from lightweight syntactic linters to whole-program
-data-flow and taint engines~\cite{chess2004}. Industrial deployments such
-as Coverity~\cite{bessey2010} and Infer~\cite{distefano2019} demonstrated
-that inter-procedural analysis scales to very large codebases, while
-\mbox{FindBugs}/SpotBugs showed that even simple bug patterns catch real
-defects at low cost~\cite{ayewah2008}. The code-property-graph
-formulation of Yamaguchi \textit{et~al.}~\cite{yamaguchi2014} and the
-declarative query model of CodeQL~\cite{avgustinov2016} made it practical
-to express security queries as reusable, shareable rules; open tools such
-as Semgrep~\cite{semgrep} and Bandit~\cite{bandit} brought the same idea
-to a broad developer audience. A persistent finding across this
-literature, however, is that adoption is limited less by analysis power
-than by developer experience: false positives, missing context, and poor
-result presentation drive users away~\cite{johnson2013,nachtigall2022}.
-\cs\ uses a curated set of pattern detectors for the high-precision,
-high-severity classes---hard-coded secrets, injection sinks, unsafe
-deserialisation, request-forgery patterns---and delegates the
-context-dependent judgement to its LLM stage rather than expanding the
-rule set indefinitely.
+The idea that a machine should read code for defects is old, and its
+history is a sequence of solutions each of which created the next
+problem. The earliest security-relevant static analysers were syntactic:
+lint-style checks and, later, bug-pattern detectors such as
+FindBugs~\cite{ayewah2008}. They were cheap to run and caught real
+mistakes, which established that automated inspection was worthwhile at
+all. Their weakness was equally clear---a purely local pattern cannot see
+how a tainted value flows across functions---so the field moved to
+inter-procedural data-flow and taint analysis. Coverity showed that this
+could be done over hundreds of millions of lines of industrial
+code~\cite{bessey2010}, Infer brought a compositional formulation to a
+comparable scale~\cite{distefano2019}, and Chess and McGraw framed the
+whole activity as a security discipline rather than a quality
+one~\cite{chess2004}. Depth, however, came with two costs: substantial
+engineering to deploy, and a false-positive burden large enough that
+managing it became a product in itself. Studies of practitioners found
+that developers abandon static analysers not because the tools lack
+power, but because results arrive out of context, the noise is high, and
+triage does not fit the way people work~\cite{johnson2013,nachtigall2022}.
 
-\subsection{Software Metrics and Structural Health}
-Cyclomatic complexity~\cite{mccabe1976} remains the most widely used
-measure of control-flow intricacy and correlates with defect density and
-test effort; the Maintainability Index~\cite{coleman1994} combines it
-with size and Halstead volume into a single maintainability figure.
-\cs\ computes per-function cyclomatic complexity, surfaces the highest-risk
-functions, and feeds the mean value into its composite score, treating
-structural debt as a first-class signal alongside security findings.
+The response to the rule-authoring bottleneck was to make rules a
+first-class, shareable artefact. Yamaguchi \textit{et~al.}\ modelled a
+program as a code property graph so that a vulnerability could be
+expressed as a graph query~\cite{yamaguchi2014}, and CodeQL turned such
+queries into a declarative language with a community
+library~\cite{avgustinov2016}; lighter open tools such as
+Semgrep~\cite{semgrep} and Bandit~\cite{bandit} put custom rules in reach
+of ordinary developers. This solved shareability but not the underlying
+limit: a rule, however elegant, encodes a pattern the author already
+anticipated, and every new class of weakness needs a new rule. In
+parallel, a different line of work summarised a program's health as a
+number rather than a list of defects. McCabe's cyclomatic
+complexity~\cite{mccabe1976} correlates with defect density and test
+effort, and the Maintainability Index folded it together with size and
+volume into a single figure~\cite{coleman1994}. These metrics are useful
+as a triage signal, but a scalar does not localise or explain a
+vulnerability---it only says where to look harder.
 
-\subsection{Dynamic Analysis and Sandboxing}
-Dynamic techniques observe a program as it executes. Fuzzing has become
-the dominant automated bug-finding method for native
-code~\cite{manes2021}, and container isolation is now the standard way to
-run untrusted or unknown software with bounded
-privileges~\cite{merkel2014docker}. \cs\ does not fuzz; instead it builds
-the project into a Docker image (generating a Dockerfile when none is
-present), runs it under CPU and memory limits, and records build time,
-start-up latency, and a stream of resource and behavioural events. The
-goal is a fast, low-configuration ``does it run, and how does it
-behave'' check that complements the static passes.
+Because static reasoning is necessarily incomplete, execution-based
+methods developed alongside it. Fuzzing became the dominant automated
+bug-finding technique for native code~\cite{manes2021}, and container
+isolation made it routine to run unknown or untrusted software with
+bounded privileges~\cite{merkel2014docker}. Dynamic analysis finds bugs
+that static analysis cannot, but it needs harnesses, it needs time, and
+it covers business logic poorly, so it complements rather than replaces
+the static passes.
 
-\subsection{Language Models for Code and Security}
-LLMs trained on source code~\cite{chen2021codex} can summarise, review,
-and transform programs, and a growing body of work evaluates them
-specifically for security. Pearce \textit{et~al.}\ studied the security
-of code \emph{generated} by Copilot~\cite{pearce2022} and later the use
-of LLMs for \emph{zero-shot vulnerability repair}~\cite{pearce2023};
-Khoury \textit{et~al.}~\cite{khoury2023} assessed the security of
-ChatGPT-generated code. Learning-based detectors such as
-Devign~\cite{zhou2019devign} and LineVul~\cite{fu2022linevul} predict
-vulnerable functions or lines directly, though subsequent studies caution
-that reported accuracy is sensitive to dataset
-quality~\cite{steenhoek2023,croft2023}. \cs\ takes a pragmatic position:
-it uses a small, locally hosted instruction-tuned model
-(\mbox{Llama~3.2}~\cite{touvron2023llama2}) to produce structured,
-schema-constrained findings for each file, and it always presents the
-model's output next to the pattern-based result and the offending source,
-so a human makes the final call.
+The next shift was semantic. LLMs trained on source code could, for the
+first time, reason about a program's intent rather than its
+syntax~\cite{chen2021codex}, and researchers quickly turned them toward
+security. Pearce \textit{et~al.}\ measured how often code \emph{generated}
+by an assistant is insecure~\cite{pearce2022} and then showed that an LLM
+can \emph{repair} vulnerabilities zero-shot~\cite{pearce2023}; Khoury
+\textit{et~al.}\ found that a large fraction of ChatGPT-produced snippets
+contain exploitable flaws~\cite{khoury2023}. Learned detectors such as
+Devign~\cite{zhou2019devign} and LineVul~\cite{fu2022linevul} predicted
+vulnerable functions and lines directly. The capability was real, but two
+new problems came with it. First, the reported accuracy of learned
+detectors proved highly sensitive to the quality of the training and
+evaluation data, and drops sharply across
+projects~\cite{steenhoek2023,croft2023}, which argues for keeping a human
+in the loop rather than trusting a verdict. Second, and more
+fundamental for practice, the models capable of this reasoning are
+reached through hosted APIs---so using them re-introduces exactly the
+confidentiality and cost problems that on-premises static analysis had
+avoided.
 
-\subsection{Security of LLM-Integrated Applications}
-As applications embed LLMs, a new weakness class has emerged. Prompt
-injection---direct~\cite{perez2022ignore} or indirect through retrieved
-content~\cite{greshake2023}---lets an attacker override a system prompt,
-and the OWASP Top~10 for LLM Applications~\cite{owaspllm2025} additionally
-enumerates insecure output handling, training-data and model poisoning,
-sensitive-information disclosure, and excessive agency. Retrieval-augmented
-generation~\cite{lewis2020rag} widens the surface further by introducing a
-document loader, an embedding store, and a reranker, each a potential sink
-for untrusted input. Our case study (\cref{sec:results}) deliberately
-targets this class.
+The analysis target then moved as well. As applications began embedding
+LLMs, prompt injection emerged as a weakness class in its own
+right---direct manipulation of the instruction stream~\cite{perez2022ignore}
+and indirect injection through retrieved content~\cite{greshake2023}---and
+was codified in the OWASP Top~10 for LLM
+Applications~\cite{owaspllm2025}. Retrieval-augmented
+generation~\cite{lewis2020rag} is especially exposed, because it adds a
+document loader, an embedding store, and a reranker, each a fresh sink for
+untrusted input. An analyser built today has to cover this class, not
+just the classical one.
 
-\subsection{On-Device Inference and Positioning}
-Efficient quantised inference runtimes now make it feasible to run
-multi-billion-parameter models on a laptop~\cite{ollama,touvron2023llama}.
-\cs\ builds on this to keep the entire pipeline local. To our knowledge,
-existing tools occupy adjacent points in the design space---cloud SAST,
-cloud LLM review, or local linters without semantic reasoning---but not
-the combination of \emph{local}, \emph{multi-modal} (static $+$ dynamic
-$+$ LLM $+$ metrics), and \emph{developer-facing} that \cs\ targets.
-\Cref{tab:compare} makes this positioning explicit.
+The final piece is what makes a different design possible. Open model
+families such as LLaMA and Llama~2~\cite{touvron2023llama,touvron2023llama2},
+together with efficient quantised inference runtimes like
+Ollama~\cite{ollama}, now let a multi-billion-parameter model run on a
+laptop at interactive speed. The technical reason the semantic step had
+to live in the cloud has therefore gone away.
+
+\cs\ is the point where these threads meet. Prior work advanced one axis
+at a time and paid for it on another: depth of analysis at the expense of
+usability, semantic power at the expense of confidentiality and cost,
+breadth of coverage at the expense of integration. \cs\ instead runs
+pattern-based SAST, a cyclomatic-complexity engine, an on-device
+\mbox{Llama~3.2} semantic reviewer, and a containerised dynamic pass
+together on the developer's machine, behind one interface and one
+transparent \phindex, with a hard no-egress boundary. It gives up
+frontier-model scale to do so, and manages that trade by keeping the
+model advisory and always shown next to a corroborating deterministic
+rule and the offending source. \Cref{tab:litreview} summarises the works
+above, the advance each made, and the limitation \cs\ is designed to
+carry forward.
+
+\input{sections/tables/tab-litreview}
