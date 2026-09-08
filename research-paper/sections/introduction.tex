@@ -49,22 +49,27 @@ there is no shared notion of overall risk, and the accumulated friction
 is enough that developers disengage from static analysis
 altogether~\cite{johnson2013,nachtigall2022}.
 
-This paper presents \cs, a local-first desktop platform that answers all
-four difficulties at once by moving the entire audit onto the developer's
-machine. \cs\ combines pattern-based static detection, a
-cyclomatic-complexity engine, an on-device LLM reviewer, and a
-containerised dynamic pass behind a single graphical workflow, and folds
-their output into one transparent \phindex. The LLM stage runs a
-quantised \mbox{Llama~3.2} model inside a local Ollama
-container~\cite{ollama,touvron2023llama2}; the dynamic stage builds and
-runs the project in a resource-limited Docker
-sandbox~\cite{merkel2014docker}. No stage of the pipeline opens an
-outbound connection, and the interface displays this property
-explicitly. Nothing leaves the machine, so the confidentiality concern is
-removed; the tool runs unchanged in an air-gapped network; local
-inference has no marginal API cost and no provider lock-in; and a single
-tool presents every modality's output, and one composite score, next to
-the source that produced it.
+We present \cs\repomark, the one-fit solution to all four difficulties
+above. \cs\ is a local-first desktop application that performs a complete
+security and structural audit of a source-code repository without any
+part of the code, the prompts, or the results ever leaving the
+developer's machine. It runs four analyses over the project---curated
+pattern-based static detection for the high-severity, low-ambiguity
+weakness classes; a cyclomatic-complexity engine that ranks the
+structural hot-spots; an on-device \mbox{Llama~3.2} reviewer, served by a
+local Ollama container~\cite{ollama,touvron2023llama2}, that reasons
+about context-dependent issues; and a resource-limited Docker
+sandbox~\cite{merkel2014docker} that builds and exercises the project at
+runtime---then fuses and de-duplicates their findings and folds them,
+with the metrics, into one transparent \phindex. Twelve coordinated
+screens let a developer configure the audit, watch it run, and triage
+every finding next to the source that produced it, and an always-visible
+indicator confirms that no outbound connection is open. Because nothing
+is transmitted, the confidentiality exposure disappears; because the
+inference is local, the tool runs unchanged in an air-gapped network and
+incurs no per-token API cost and no provider lock-in; and because one
+application carries every modality and a single score, the workflow is no
+longer fragmented.
 
 The contributions of this work are a local-first architecture that
 co-locates pattern-based static application security testing (SAST), an

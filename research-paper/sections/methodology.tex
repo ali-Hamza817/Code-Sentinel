@@ -2,12 +2,13 @@
 \label{sec:method}
 
 \subsection{Design Goals}
-\cs\ was built around four goals. \textbf{(G1) No egress:} a complete
-audit must run with the network interface disabled. \textbf{(G2)
-Multi-modal:} pattern analysis, structural metrics, semantic (LLM) review,
-and dynamic execution should contribute to one result rather than living
-in separate tools. \textbf{(G3) Context-preserving triage:} every finding
-must be inspectable next to the exact source that produced it.
+\cs\ was built around four goals. \textbf{(G1) No network egress:} a
+complete audit must run with the machine's network interface disabled, so
+that no code, prompt, or result is ever transmitted. \textbf{(G2)
+Multi-modal:} pattern analysis, structural metrics, semantic (LLM)
+review, and dynamic execution should contribute to one result rather than
+living in separate tools. \textbf{(G3) Context-preserving triage:} every
+finding must be inspectable next to the exact source that produced it.
 \textbf{(G4) One number, honestly derived:} the platform should output a
 single interpretable health score whose computation is fully disclosed.
 
