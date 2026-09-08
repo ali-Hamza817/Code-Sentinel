@@ -7,8 +7,8 @@ problem. The earliest security-relevant static analysers were syntactic:
 lint-style checks and, later, bug-pattern detectors such as
 FindBugs~\cite{ayewah2008}. They were cheap to run and caught real
 mistakes, which established that automated inspection was worthwhile at
-all. Their weakness was equally clear---a purely local pattern cannot see
-how a tainted value flows across functions---so the field moved to
+all. Their weakness was equally clear, a purely local pattern cannot see
+how a tainted value flows across functions, so the field moved to
 inter-procedural data-flow and taint analysis. Coverity showed that this
 could be done over hundreds of millions of lines of industrial
 code~\cite{bessey2010}, Infer brought a compositional formulation to a
@@ -37,7 +37,7 @@ complexity~\cite{mccabe1976} correlates with defect density and test
 effort, and the Maintainability Index folded it together with size and
 volume into a single figure~\cite{coleman1994}. These metrics are useful
 as a triage signal, but a scalar does not localise or explain a
-vulnerability---it only says where to look harder.
+vulnerability, it only says where to look harder.
 
 Because static reasoning is necessarily incomplete, execution-based
 methods developed alongside it. Fuzzing became the dominant automated
@@ -64,14 +64,14 @@ evaluation data, and drops sharply across
 projects~\cite{steenhoek2023,croft2023}, which argues for keeping a human
 in the loop rather than trusting a verdict. Second, and more
 fundamental for practice, the models capable of this reasoning are
-reached through hosted APIs---so using them re-introduces exactly the
+reached through hosted APIs, so using them re-introduces exactly the
 confidentiality and cost problems that on-premises static analysis had
 avoided.
 
 The analysis target then moved as well. As applications began embedding
 LLMs, prompt injection emerged as a weakness class in its own
-right---direct manipulation of the instruction stream~\cite{perez2022ignore}
-and indirect injection through retrieved content~\cite{greshake2023}---and
+right, direct manipulation of the instruction stream~\cite{perez2022ignore}
+and indirect injection through retrieved content~\cite{greshake2023}, and
 was codified in the OWASP Top~10 for LLM
 Applications~\cite{owaspllm2025}. Retrieval-augmented
 generation~\cite{lewis2020rag} is especially exposed, because it adds a

@@ -2,7 +2,7 @@
 \label{sec:interface}
 
 \cs\ is organised as a persistent left-hand navigation over twelve
-screens that share one visual system---a single accent colour, a common
+screens that share one visual system, a single accent colour, a common
 metric-tile and panel component, and an always-visible status strip that
 shows the Docker and local-model state. This section walks through the
 screens a developer meets during a full audit; every figure shows the
@@ -16,18 +16,18 @@ not enter the workspace until the local inference stack is confirmed,
 which makes the offline guarantee a precondition rather than a setting.
 
 \begin{figure*}[!tp]
-  \centering
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{boot-1}
-    \caption{Hardware verification}
-  \end{subfigure}\hfill
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{boot-3}
-    \caption{Model container provisioning}
-  \end{subfigure}
-  \caption{Initialisation sequence. \cs\ confirms the local Docker and
-           \mbox{Llama~3.2} stack before opening the workspace.}
-  \label{fig:boot}
+ \centering
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{boot-1}
+ \caption{Hardware verification}
+ \end{subfigure}\hfill
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{boot-3}
+ \caption{Model container provisioning}
+ \end{subfigure}
+ \caption{Initialisation sequence. \cs\ confirms the local Docker and
+ \mbox{Llama~3.2} stack before opening the workspace.}
+ \label{fig:boot}
 \end{figure*}
 
 \subsection{Dashboard and Static Analysis}
@@ -37,25 +37,25 @@ severity-distribution ring, model-generated insight cards, and a short
 natural-language security summary. The static-analysis screen
 (\cref{fig:static}) is the primary triage surface: a file tree annotated
 with per-file finding counts, the selected source in the centre, and the
-file's fused findings below---each with a severity badge, the originating
+file's fused findings below, each with a severity badge, the originating
 modality, a code excerpt, and a suggested fix.
 
 \begin{figure*}[!tp]
-  \centering
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{dashboard}
-    \caption{Dashboard---audit summary}
-    \label{fig:dashboard}
-  \end{subfigure}\hfill
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{static-analysis}
-    \caption{Static analysis---in-context triage}
-    \label{fig:static}
-  \end{subfigure}
-  \caption{The two screens a developer uses most: the dashboard for an
-           overview, and static analysis for per-file triage against the
-           offending source.}
-  \label{fig:dash-static}
+ \centering
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{dashboard}
+ \caption{Dashboard, audit summary}
+ \label{fig:dashboard}
+ \end{subfigure}\hfill
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{static-analysis}
+ \caption{Static analysis, in-context triage}
+ \label{fig:static}
+ \end{subfigure}
+ \caption{The two screens a developer uses most: the dashboard for an
+ overview, and static analysis for per-file triage against the
+ offending source.}
+ \label{fig:dash-static}
 \end{figure*}
 
 \subsection{Project Intake and Configuration}
@@ -67,20 +67,20 @@ encrypted storage), the Docker sandbox image and limits, the local model
 selection, and the analysis depth and complexity threshold.
 
 \begin{figure*}[!tp]
-  \centering
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{repository}
-    \caption{Repository / workspace ledger}
-    \label{fig:repo}
-  \end{subfigure}\hfill
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{settings}
-    \caption{Privacy and sandbox settings}
-    \label{fig:settings}
-  \end{subfigure}
-  \caption{Project intake and configuration. Offline mode and
-           no-cloud-transmission are on by default and shown as active.}
-  \label{fig:config}
+ \centering
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{repository}
+ \caption{Repository / workspace ledger}
+ \label{fig:repo}
+ \end{subfigure}\hfill
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{settings}
+ \caption{Privacy and sandbox settings}
+ \label{fig:settings}
+ \end{subfigure}
+ \caption{Project intake and configuration. Offline mode and
+ no-cloud-transmission are on by default and shown as active.}
+ \label{fig:config}
 \end{figure*}
 
 \subsection{AI Review and the Vulnerabilities Register}
@@ -94,20 +94,20 @@ that carries the file, line, category, and corroboration marker for each
 entry.
 
 \begin{figure*}[!tp]
-  \centering
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{ai-review}
-    \caption{AI review---file-scoped local model chat}
-    \label{fig:aireview}
-  \end{subfigure}\hfill
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{vulnerabilities}
-    \caption{Vulnerabilities---project-wide audit trail}
-    \label{fig:vulns}
-  \end{subfigure}
-  \caption{Model-assisted review. Every exchange and every finding stays
-           on the machine.}
-  \label{fig:ai-vulns}
+ \centering
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{ai-review}
+ \caption{AI review, file-scoped local model chat}
+ \label{fig:aireview}
+ \end{subfigure}\hfill
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{vulnerabilities}
+ \caption{Vulnerabilities, project-wide audit trail}
+ \label{fig:vulns}
+ \end{subfigure}
+ \caption{Model-assisted review. Every exchange and every finding stays
+ on the machine.}
+ \label{fig:ai-vulns}
 \end{figure*}
 
 \subsection{Complexity and Risk Scoring}
@@ -119,20 +119,20 @@ three sub-scores of \cref{sec:risk} as labelled bars, and a short
 model-written rationale.
 
 \begin{figure*}[!tp]
-  \centering
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{complexity}
-    \caption{Complexity---hot-spots and trend}
-    \label{fig:complexity}
-  \end{subfigure}\hfill
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{risk-scoring}
-    \caption{Risk scoring---\phindex\ and sub-scores}
-    \label{fig:risk}
-  \end{subfigure}
-  \caption{Structural health and the composite score of
-           \cref{eq:sv,eq:sc,eq:sq,eq:h}.}
-  \label{fig:complexity-risk}
+ \centering
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{complexity}
+ \caption{Complexity, hot-spots and trend}
+ \label{fig:complexity}
+ \end{subfigure}\hfill
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{risk-scoring}
+ \caption{Risk scoring, \phindex\ and sub-scores}
+ \label{fig:risk}
+ \end{subfigure}
+ \caption{Structural health and the composite score of
+ \cref{eq:sv,eq:sc,eq:sq,eq:h}.}
+ \label{fig:complexity-risk}
 \end{figure*}
 
 \subsection{Dynamic Analysis, Container Insights, Build, and Reports}
@@ -147,34 +147,34 @@ test pipeline and streams its console, and the reports screen
 exports a paginated PDF or machine-readable JSON to local disk.
 
 \begin{figure*}[!tp]
-  \centering
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{dynamic-analysis}
-    \caption{Dynamic analysis---sandbox metrics and engine log}
-    \label{fig:dynamic}
-  \end{subfigure}\hfill
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{container-insights}
-    \caption{Container insights---severity mix and hot-spots}
-    \label{fig:container}
-  \end{subfigure}
-  \caption{Runtime views from the resource-limited sandbox.}
-  \label{fig:runtime}
+ \centering
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{dynamic-analysis}
+ \caption{Dynamic analysis, sandbox metrics and engine log}
+ \label{fig:dynamic}
+ \end{subfigure}\hfill
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{container-insights}
+ \caption{Container insights, severity mix and hot-spots}
+ \label{fig:container}
+ \end{subfigure}
+ \caption{Runtime views from the resource-limited sandbox.}
+ \label{fig:runtime}
 \end{figure*}
 
 \begin{figure*}[!tp]
-  \centering
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{build-ci}
-    \caption{Build \& CI---pipeline console}
-    \label{fig:buildci}
-  \end{subfigure}\hfill
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\linewidth]{reports}
-    \caption{Reports---archival summary and export}
-    \label{fig:reports}
-  \end{subfigure}
-  \caption{Build orchestration and reporting. Reports are written to
-           local disk only.}
-  \label{fig:buildreports}
+ \centering
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{build-ci}
+ \caption{Build \& CI, pipeline console}
+ \label{fig:buildci}
+ \end{subfigure}\hfill
+ \begin{subfigure}{0.49\textwidth}
+ \includegraphics[width=\linewidth]{reports}
+ \caption{Reports, archival summary and export}
+ \label{fig:reports}
+ \end{subfigure}
+ \caption{Build orchestration and reporting. Reports are written to
+ local disk only.}
+ \label{fig:buildreports}
 \end{figure*}

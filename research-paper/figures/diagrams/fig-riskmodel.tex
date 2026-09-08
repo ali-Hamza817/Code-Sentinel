@@ -16,30 +16,30 @@
       lbl/.style={font=\scriptsize, text=csslate, fill=white, inner sep=1pt},
     ]
 
-    % ---- inputs ----
+    %% inputs
     \node[io] (n) {$n_{\text{sev}} = 6$};
     \node[io, below=of n] (c) {$\overline{CC} = 7.8$};
     \node[io, below=of c] (a) {$a = 1$};
 
-    % ---- sub-scores ----
+    %% sub-scores
     \node[sub, right=of n] (sv) {$s_v = 40$};
     \node[sub, right=of c] (sc) {$s_c = 61$};
     \node[sub, right=of a] (sq) {$s_q = 95$};
 
-    % ---- weighted sum ----
+    %% weighted sum
     \node[sum, right=30mm of sc] (H) {$H = 57$\\[1pt]\scriptsize moderate band};
 
-    % ---- input -> sub-score edges ----
+    %% input to sub-score edges
     \draw[ar] (n) -- (sv) node[lbl, midway] {$\max(0,\,100 - 10\,n_{\text{sev}})$};
     \draw[ar] (c) -- (sc) node[lbl, midway] {$\max(0,\,100 - 5\,\overline{CC})$};
     \draw[ar] (a) -- (sq) node[lbl, midway] {$95a + 50(1-a)$};
 
-    % ---- sub-score -> H edges (weights) ----
+    %% sub-score to H edges (weights)
     \draw[ar] (sv.east) -- (H.west) node[lbl, pos=0.62] {$\times\,0.5$};
     \draw[ar] (sc.east) -- (H.west) node[lbl, pos=0.55] {$\times\,0.3$};
     \draw[ar] (sq.east) -- (H.west) node[lbl, pos=0.62] {$\times\,0.2$};
 
-    % ---- health-index band ----
+    %% health-index band
     \begin{scope}[shift={($(a.south west)+(0,-15mm)$)}, x=1cm, y=1cm]
       \def\W{12.5}
       \fill[csredbg]   (0,0)         rectangle (0.50*\W,0.6);
@@ -47,7 +47,7 @@
       \fill[csgreenbg] (0.80*\W,0)   rectangle (\W,0.6);
       \draw[csslate!35] (0,0) rectangle (\W,0.6);
       \node[font=\scriptsize, text=csred]   at (0.25*\W,0.3) {critical\ \ $H<50$};
-      \node[font=\scriptsize, text=csamber] at (0.65*\W,0.3) {moderate\ \ $50\text{--}79$};
+      \node[font=\scriptsize, text=csamber] at (0.65*\W,0.3) {moderate\ \ $50$ to $79$};
       \node[font=\scriptsize, text=csgreen] at (0.90*\W,0.3) {low\ \ $H\ge 80$};
       \draw[csink, line width=1.1pt] (0.57*\W,-0.18) -- (0.57*\W,0.78);
       \node[font=\scriptsize\bfseries, text=csink, anchor=south]

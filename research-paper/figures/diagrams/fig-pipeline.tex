@@ -1,4 +1,4 @@
-\begin{figure*}[t]
+\begin{figure*}[!tp]
   \centering
   \begin{tikzpicture}[
       font=\footnotesize,
@@ -18,7 +18,7 @@
     \node[stage] (repo)  {Repository};
     \node[stage, right=of repo] (inv) {File\\inventory};
 
-    % parallel analyses
+    %% parallel analyses
     \node[ana, right=11mm of inv, yshift=9mm]  (pat) {Pattern scan\\\scriptsize(rules, CWE)};
     \node[ana, right=11mm of inv]              (cx)  {Complexity engine\\\scriptsize(McCabe $CC$)};
     \node[ana, right=11mm of inv, yshift=-9mm] (llm) {LLM review\\\scriptsize(Llama 3.2, schema)};
@@ -45,10 +45,10 @@
 
   \end{tikzpicture}
   \caption{The \cs\ analysis pipeline. A file inventory feeds three
-           parallel analyses---pattern scanning and complexity in
-           process, semantic review by the on-device model---whose
-           output is fused (\cref{sec:fusion}), augmented by a sandboxed
-           dynamic pass, and aggregated into the composite risk score and
-           the exported report.}
+           parallel analyses (pattern scanning and complexity in process,
+           semantic review by the on-device model); their output is fused
+           (\cref{sec:fusion}), augmented by a sandboxed dynamic pass, and
+           aggregated into the composite risk score and the exported
+           report.}
   \label{fig:pipeline}
 \end{figure*}

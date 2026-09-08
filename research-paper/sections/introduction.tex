@@ -6,15 +6,15 @@ and the categories of weakness responsible for real incidents have
 remained remarkably stable for two decades~\cite{owasp2021,mitrecwe}. A
 mature ecosystem of assistive tools exists to help developers find these
 weaknesses before release, but the tools that are actually
-capable---whole-program static analysers and, more recently, large
-language models (LLMs) applied to code review---share a set of deployment
+capable, whole-program static analysers and, more recently, large
+language models (LLMs) applied to code review, share a set of deployment
 assumptions that are increasingly difficult to accept.
 
 The first difficulty is that auditing your code, with these tools, means
 letting a third party read it. The capable static-analysis and
 code-review services on the market run in the cloud, so using them means
-uploading the repository---frequently the organisation's most valuable
-and most sensitive asset---to external infrastructure, where it is
+uploading the repository, frequently the organisation's most valuable
+and most sensitive asset, to external infrastructure, where it is
 transported, processed, cached, and in some cases retained. Every such
 upload creates a disclosure path that did not exist before the audit and
 enlarges the set of parties that can be compromised to obtain the code.
@@ -35,8 +35,8 @@ The third difficulty concerns cost and dependency. LLMs trained on code
 give review a form of semantic reasoning that rule engines
 lack~\cite{chen2021codex}, but the models good enough to do it well are
 reached through metered APIs. Running an LLM pass over an entire
-repository on every push---the point at which it is most
-useful---converts security analysis into a per-token line item and
+repository on every push, the point at which it is most
+useful, converts security analysis into a per-token line item and
 couples the workflow to one provider's pricing, rate limits, and
 availability. Cost and vendor lock-in, not capability, become the
 limiting factors.
@@ -49,18 +49,18 @@ there is no shared notion of overall risk, and the accumulated friction
 is enough that developers disengage from static analysis
 altogether~\cite{johnson2013,nachtigall2022}.
 
-We present \cs\repomark, the one-fit solution to all four difficulties
-above. \cs\ is a local-first desktop application that performs a complete
-security and structural audit of a source-code repository without any
-part of the code, the prompts, or the results ever leaving the
-developer's machine. It runs four analyses over the project---curated
-pattern-based static detection for the high-severity, low-ambiguity
-weakness classes; a cyclomatic-complexity engine that ranks the
-structural hot-spots; an on-device \mbox{Llama~3.2} reviewer, served by a
-local Ollama container~\cite{ollama,touvron2023llama2}, that reasons
-about context-dependent issues; and a resource-limited Docker
+We present \textsc{CodeSentinel}\repomark, the one-fit solution to all
+four difficulties above. \cs\ is a local-first desktop application that
+performs a complete security and structural audit of a source-code
+repository without any part of the code, the prompts, or the results
+ever leaving the developer's machine. It runs four analyses over the
+project: curated pattern-based static detection for the high-severity,
+low-ambiguity weakness classes; a cyclomatic-complexity engine that
+ranks the structural hot-spots; an on-device \mbox{Llama~3.2} reviewer,
+served by a local Ollama container~\cite{ollama,touvron2023llama2}, that
+reasons about context-dependent issues; and a resource-limited Docker
 sandbox~\cite{merkel2014docker} that builds and exercises the project at
-runtime---then fuses and de-duplicates their findings and folds them,
+runtime. It then fuses and de-duplicates their findings and folds them,
 with the metrics, into one transparent \phindex. Twelve coordinated
 screens let a developer configure the audit, watch it run, and triage
 every finding next to the source that produced it, and an always-visible

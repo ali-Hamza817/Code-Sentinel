@@ -5,15 +5,15 @@
 We exercise \cs\ on \vellum, a retrieval-augmented-generation (RAG)
 service written in Python; \cref{tab:subject} gives its profile. \vellum\
 is a synthetic subject constructed to be structurally representative of a
-production RAG system---document loader, semantic chunker, embedding
+production RAG system, document loader, semantic chunker, embedding
 cache, hybrid dense/sparse retriever, cross-encoder reranker, guardrailed
-generator, and an evaluation harness---and to contain the weakness
+generator, and an evaluation harness, and to contain the weakness
 categories that the OWASP Top~10 for LLM
 Applications~\cite{owaspllm2025} and the indirect-prompt-injection
 literature~\cite{greshake2023,perez2022ignore} identify as
 characteristic of this class. The measurements below therefore
-characterise the platform's \emph{operational} behaviour---latency,
-determinism, inter-modality agreement, and score sensitivity---which are
+characterise the platform's \emph{operational} behaviour, latency,
+determinism, inter-modality agreement, and score sensitivity, which are
 properties of the tool and its configuration rather than of any
 ground-truth vulnerability labelling; a labelled-corpus accuracy study is
 identified as future work in \cref{sec:discussion}.
@@ -36,9 +36,9 @@ modality.
 
 Normalising by size gives a detection density
 \begin{equation}
-  D \;=\; \frac{N_{\text{findings}}}{\text{KLOC}}
-    \;=\; \frac{20}{5.2} \;\approx\; 3.8~\text{findings/KLOC},
-  \label{eq:density}
+ D \;=\; \frac{N_{\text{findings}}}{\text{KLOC}}
+ \;=\; \frac{20}{5.2} \;\approx\; 3.8~\text{findings/KLOC},
+ \label{eq:density}
 \end{equation}
 of which $1.3$~findings/KLOC are security-category. Of the $20$ fused
 findings, $9$ were pattern-only, $4$ were model-only, and $7$ were
@@ -52,15 +52,15 @@ matched negative controls, and label each present/absent by the pattern
 pass and by the model pass. \Cref{tab:agreement} is the resulting
 contingency table. Chance-corrected agreement is Cohen's $\kappa$,
 \begin{equation}
-  \kappa \;=\; \frac{p_o - p_e}{1 - p_e}
-         \;=\; \frac{0.896 - 0.615}{1 - 0.615}
-         \;=\; 0.73,
-  \label{eq:kappa}
+ \kappa \;=\; \frac{p_o - p_e}{1 - p_e}
+ \;=\; \frac{0.896 - 0.615}{1 - 0.615}
+ \;=\; 0.73,
+ \label{eq:kappa}
 \end{equation}
 where $p_o$ is the observed agreement and $p_e$ the agreement expected by
 chance from the marginals. A value of $0.73$ is ``substantial'' on the
 usual interpretation: the two modalities largely see the same things,
-and the disagreements are where each contributes uniquely---the model on
+and the disagreements are where each contributes uniquely, the model on
 a citation-integrity weakness no syntactic rule encodes, the rules on an
 unsafe-deserialisation call the model under-weighted.
 
@@ -70,7 +70,7 @@ unsafe-deserialisation call the model under-weighted.
 The complexity engine flagged five functions above the default budget
 (\cref{tab:hotspots}); \texttt{HybridRetriever.retrieve} is the worst at
 $CC=26$. Mean cyclomatic complexity across the project is
-$\overline{CC}=7.8$ over $214$ decision points---healthy on average, with
+$\overline{CC}=7.8$ over $214$ decision points, healthy on average, with
 risk concentrated in a small number of methods, which is the signal the
 ranking is meant to expose (\cref{tab:hotspots}).
 
@@ -79,8 +79,8 @@ ranking is meant to expose (\cref{tab:hotspots}).
 The per-file cost of the model pass is well described by an affine
 function of the input length $L_f$ (code plus prompt, in tokens),
 \begin{equation}
-  T_{\text{llm}}(f) \;=\; \alpha + \beta\, L_f,
-  \label{eq:tllm}
+ T_{\text{llm}}(f) \;=\; \alpha + \beta\, L_f,
+ \label{eq:tllm}
 \end{equation}
 with a least-squares fit over the $47$ files giving $\alpha = 0.83$\,s
 (fixed prompt-load and decode set-up) and $\beta = 6.9$\,ms/token, with
@@ -91,21 +91,21 @@ $\sigma = 2.4$\,s), for an aggregate of $174$\,s.
 \subsection{End-to-End Audit Time}
 The total audit time is the sum of the stage costs,
 \begin{equation}
-  T_{\text{audit}} \;=\; T_{\text{walk}} + T_{\text{pat}}
-     + T_{\text{cx}} + \sum_{f \in F} T_{\text{llm}}(f)
-     + T_{\text{dyn}}.
-  \label{eq:taudit}
+ T_{\text{audit}} \;=\; T_{\text{walk}} + T_{\text{pat}}
+ + T_{\text{cx}} + \sum_{f \in F} T_{\text{llm}}(f)
+ + T_{\text{dyn}}.
+ \label{eq:taudit}
 \end{equation}
 Measured over $R=10$ runs, $T_{\text{audit}} = 196 \pm 11$\,s
-($\approx 3.3$\,min), with the non-model stages---tree walk
+($\approx 3.3$\,min), with the non-model stages, tree walk
 ($0.4$\,s), pattern scan ($1.2$\,s), complexity ($0.7$\,s), and the
-dynamic pass ($19.3$\,s)---contributing $21.6$\,s in total. The model
+dynamic pass ($19.3$\,s), contributing $21.6$\,s in total. The model
 pass is therefore $89\%$ of wall time. Because $T_{\text{llm}}$ is
 independent per file, \cref{eq:taudit} is linear in $|F|$ with slope
 $\overline{T}_{\text{llm}}\approx 3.7$\,s/file against a fixed cost of
 $\approx 21.6$\,s; a $500$-file repository would take $\approx 31$\,min
 on this hardware with a single model instance, and roughly
-$5$--$10\times$ less with the model on a GPU. Crucially, and as
+$5$ to $10\times$ less with the model on a GPU. Crucially, and as
 instrumented at the network interface, the entire audit issued
 \emph{zero} outbound requests.
 
@@ -114,10 +114,10 @@ With a fixed seed and temperature $0.1$, we ran the model pass $K=10$
 times per file and measured the stability of the returned finding set by
 the mean pairwise Jaccard index,
 \begin{equation}
-  \bar{J} \;=\; \frac{1}{|F|}\sum_{f\in F}
-     \binom{K}{2}^{-1}\!\!\sum_{i<j}
-     \frac{|A_{f,i}\cap A_{f,j}|}{|A_{f,i}\cup A_{f,j}|},
-  \label{eq:jaccard}
+ \bar{J} \;=\; \frac{1}{|F|}\sum_{f\in F}
+ \binom{K}{2}^{-1}\!\!\sum_{i<j}
+ \frac{|A_{f,i}\cap A_{f,j}|}{|A_{f,i}\cup A_{f,j}|},
+ \label{eq:jaccard}
 \end{equation}
 where $A_{f,i}$ is the finding set for file $f$ on run $i$. We obtain
 $\bar{J}=0.94$, and the per-file finding count has a coefficient of
@@ -132,16 +132,16 @@ Substituting the case-study values into
 $\overline{CC}=7.8$, and $a=1$ gives $s_v = 40$, $s_c = 61$, $s_q = 95$
 (\cref{tab:risk}), and
 \[
-  H = \operatorname{round}(0.5{\cdot}40 + 0.3{\cdot}61 + 0.2{\cdot}95)
-    = \operatorname{round}(57.3) = 57,
+ H = \operatorname{round}(0.5{\cdot}40 + 0.3{\cdot}61 + 0.2{\cdot}95)
+ = \operatorname{round}(57.3) = 57,
 \]
 i.e.\ the \emph{moderate} band. Where $s_v,s_c \in (0,100)$ the score is
 linear, so its sensitivity is constant:
 \begin{equation}
-  \frac{\partial H}{\partial n_{\text{sev}}} = -5, \qquad
-  \frac{\partial H}{\partial \overline{CC}} = -1.5, \qquad
-  \frac{\partial H}{\partial a} = +9.
-  \label{eq:sens}
+ \frac{\partial H}{\partial n_{\text{sev}}} = -5, \qquad
+ \frac{\partial H}{\partial \overline{CC}} = -1.5, \qquad
+ \frac{\partial H}{\partial a} = +9.
+ \label{eq:sens}
 \end{equation}
 Each additional critical- or high-severity finding costs $5$ points of
 $H$; each unit of mean complexity costs $1.5$; completing the audit

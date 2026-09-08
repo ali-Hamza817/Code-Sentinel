@@ -21,23 +21,23 @@ main/renderer split. \Cref{fig:architecture} shows the four layers, all
 resident on the developer's machine inside a no-egress boundary.
 
 \begin{itemize}
-  \item The \emph{presentation layer} is a React single-page application
-        of twelve coordinated screens (\cref{sec:interface}). It holds no
-        analysis logic; it issues typed requests over an
-        inter-process-communication (IPC) bridge and renders results.
-  \item The \emph{orchestration layer} (the Electron main process)
-        validates each request, enforces the offline policy, and routes
-        work to the services.
-  \item The \emph{service layer} contains four in-process modules: a
-        \textsc{RepoService} (checkout, file inventory, pattern
-        detection, complexity), an \textsc{AiService} (prompt assembly,
-        model I/O, finding extraction), an \textsc{ExecutionService}
-        (Dockerfile synthesis, image build, sandboxed run, telemetry),
-        and a \textsc{RiskModel} (fusion and scoring).
-  \item The \emph{local infrastructure layer} comprises an embedded
-        SQLite database for projects and findings, the host Docker
-        engine, and an Ollama container hosting the quantised
-        \mbox{Llama~3.2} weights~\cite{ollama,touvron2023llama2}.
+ \item The \emph{presentation layer} is a React single-page application
+ of twelve coordinated screens (\cref{sec:interface}). It holds no
+ analysis logic; it issues typed requests over an
+ inter-process-communication (IPC) bridge and renders results.
+ \item The \emph{orchestration layer} (the Electron main process)
+ validates each request, enforces the offline policy, and routes
+ work to the services.
+ \item The \emph{service layer} contains four in-process modules: a
+ \textsc{RepoService} (checkout, file inventory, pattern
+ detection, complexity), an \textsc{AiService} (prompt assembly,
+ model I/O, finding extraction), an \textsc{ExecutionService}
+ (Dockerfile synthesis, image build, sandboxed run, telemetry),
+ and a \textsc{RiskModel} (fusion and scoring).
+ \item The \emph{local infrastructure layer} comprises an embedded
+ SQLite database for projects and findings, the host Docker
+ engine, and an Ollama container hosting the quantised
+ \mbox{Llama~3.2} weights~\cite{ollama,touvron2023llama2}.
 \end{itemize}
 
 \subsection{Analysis Pipeline}
@@ -87,8 +87,8 @@ discarded; surviving items are tagged as model-originated.
 \subsubsection{Dynamic sandbox analysis}
 \label{sec:dynamic}
 The \textsc{ExecutionService} builds the project into a Docker
-image---synthesising a minimal Dockerfile when the repository lacks
-one---and runs the container under CPU and memory
+image, synthesising a minimal Dockerfile when the repository lacks
+one, and runs the container under CPU and memory
 limits~\cite{merkel2014docker}. It records image build time, container
 start-up latency, and a two-second-interval stream of CPU and memory
 utilisation, plus a log of coarse behavioural events (file, socket, and
@@ -117,11 +117,11 @@ findings at \emph{critical} or \emph{high} severity, $\overline{CC}$ the
 mean cyclomatic complexity, and let the audit-completion flag be
 $a \in \{0,1\}$. Then
 \begin{align}
-  s_v &= \max\!\left(0,\; 100 - 10\, n_{\text{sev}}\right), \label{eq:sv}\\
-  s_c &= \max\!\left(0,\; 100 - 5\, \overline{CC}\right), \label{eq:sc}\\
-  s_q &= 95\,a + 50\,(1-a), \label{eq:sq}\\
-  H   &= \operatorname{round}\!\left(0.5\, s_v + 0.3\, s_c + 0.2\, s_q\right).
-        \label{eq:h}
+ s_v &= \max\!\left(0,\; 100 - 10\, n_{\text{sev}}\right), \label{eq:sv}\\
+ s_c &= \max\!\left(0,\; 100 - 5\, \overline{CC}\right), \label{eq:sc}\\
+ s_q &= 95\,a + 50\,(1-a), \label{eq:sq}\\
+ H &= \operatorname{round}\!\left(0.5\, s_v + 0.3\, s_c + 0.2\, s_q\right).
+ \label{eq:h}
 \end{align}
 The weights in \cref{eq:h} encode the platform's priorities: exploitable
 weaknesses dominate, structural debt is a secondary drag, and analysis
@@ -132,9 +132,9 @@ deliberately simple and transparent; \cref{sec:discussion} discusses
 calibration as future work.
 
 \subsection{Reporting}
-An audit can be exported as a paginated PDF---executive summary,
+An audit can be exported as a paginated PDF, executive summary,
 structural hot-spot matrix, and a full finding ledger with severity,
-type, location, and identifier---or as machine-readable JSON for
+type, location, and identifier, or as machine-readable JSON for
 downstream tooling. Reports are written to local disk only.
 
 \subsection{Implementation}

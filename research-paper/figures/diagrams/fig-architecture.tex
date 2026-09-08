@@ -10,35 +10,35 @@
       ar/.style={-{Stealth[length=2.6mm]}, draw=csslate!70, line width=1pt},
     ]
 
-    % ---------- Presentation ----------
+    %% Presentation layer
     \node[chip, minimum width=34mm] (p1) {React renderer};
     \node[chip, minimum width=34mm, right=6mm of p1] (p2) {Twelve screens};
     \node[chip, minimum width=34mm, right=6mm of p2] (p3) {Offline status strip};
 
-    % ---------- Orchestration ----------
+    %% Orchestration layer
     \node[chip, minimum width=34mm, below=16mm of p1] (o1) {Electron main};
     \node[chip, minimum width=34mm, right=6mm of o1] (o2) {Typed IPC bridge};
     \node[chip, minimum width=34mm, right=6mm of o2] (o3) {Offline policy};
 
-    % ---------- Services ----------
+    %% Services layer
     \node[chip, minimum width=25mm, below=16mm of o1] (s1) {RepoService};
     \node[chip, minimum width=25mm, right=5mm of s1] (s2) {AiService};
     \node[chip, minimum width=30mm, right=5mm of s2] (s3) {ExecutionService};
     \node[chip, minimum width=22mm, right=5mm of s3] (s4) {RiskModel};
 
-    % ---------- Local infrastructure ----------
+    %% Local infrastructure layer
     \node[chip, minimum width=34mm, below=16mm of s1] (i1) {SQLite store};
     \node[chip, minimum width=34mm, right=6mm of i1] (i2) {Docker engine};
     \node[chip, minimum width=34mm, right=6mm of i2,
           fill=csgreenbg, draw=csgreen!55] (i3) {Ollama\,+\,Llama 3.2};
 
-    % ---------- layer labels ----------
+    %% Layer labels
     \node[lyr] (lp) at ([xshift=-8mm]p1.west) {Presentation};
     \node[lyr] (lo) at ([xshift=-8mm]o1.west) {Orchestration};
     \node[lyr] (ls) at ([xshift=-8mm]s1.west) {Services};
     \node[lyr] (li) at ([xshift=-8mm]i1.west) {Local\\infrastructure};
 
-    % ---------- layer bands ----------
+    %% Layer bands
     \begin{scope}[on background layer]
       \node[band, fill=csbluebg,  fit=(p1)(p3)] {};
       \node[band, fill=csgraybg,  fit=(o1)(o3)] {};
@@ -46,25 +46,25 @@
       \node[band, fill=csgreenbg, fit=(i1)(i3)] {};
     \end{scope}
 
-    % ---------- inter-layer flow ----------
+    %% Inter-layer flow
     \draw[ar] (p2.south) -- (o2.north);
     \draw[ar] (o2.south) -- (s2.north);
     \draw[ar] (s2.south) -- (i2.north);
 
-    % ---------- no-egress boundary ----------
+    %% No-egress boundary
     \begin{scope}[on background layer]
       \node[draw=csslate!75, dashed, line width=1pt, rounded corners=7pt,
             fit=(lp)(p3)(li)(i3), inner sep=8mm] (bnd) {};
     \end{scope}
     \node[fill=white, inner sep=2.5pt, anchor=west,
           font=\footnotesize\bfseries, text=csslate]
-      at (bnd.north west) {\ Developer's machine \textemdash\ no network egress\ };
+      at (bnd.north west) {\ Developer's machine \textbf{\textbullet} no network egress\ };
 
   \end{tikzpicture}
-  \caption{\cs\ architecture. Four in-machine layers---a React
+  \caption{\cs\ architecture. Four in-machine layers, a React
            presentation layer, an Electron orchestration layer, four
            analysis services, and local infrastructure hosting SQLite,
            the Docker engine, and the quantised \mbox{Llama~3.2}
-           model---inside a boundary that no stage crosses.}
+           model, inside a boundary that no stage crosses.}
   \label{fig:architecture}
 \end{figure*}

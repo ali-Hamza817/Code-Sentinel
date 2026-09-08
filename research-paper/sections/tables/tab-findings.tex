@@ -1,52 +1,52 @@
 \begin{table*}[!tbp]
-  \centering
-  \caption{Representative critical- and high-severity findings from the
-           \textit{Vellum} audit.
-           \textsc{p}~=~pattern rule, \textsc{m}~=~on-device model,
-           \textsc{p+m}~=~corroborated.}
-  \label{tab:findings}
-  \renewcommand{\arraystretch}{1.25}
-  \small
-  \begin{tabularx}{\textwidth}{@{}
-      >{\raggedright\arraybackslash}p{0.135\textwidth}
-      >{\ttfamily\scriptsize\raggedright\arraybackslash}p{0.205\textwidth}
-      c c c
-      >{\raggedright\arraybackslash}X @{}}
-    \toprule
-    \textbf{Finding} & \normalfont\textbf{Location} & \textbf{Sev.} &
-    \textbf{CWE} & \textbf{Src.} & \textbf{Summary} \\
-    \midrule
-    Prompt injection via unsanitised query &
-      generation/prompt\_builder.py:88 & Crit. & 77 & \textsc{p+m} &
-      Raw user query concatenated into the system prompt; can override the
-      guardrail preamble and exfiltrate retrieved context. \\
-    Unsafe deserialisation of embedding cache &
-      embeddings/cache.py:52 & Crit. & 502 & \textsc{p} &
-      \texttt{pickle.load} on a configuration-controlled path; write
-      access to the cache directory yields code execution on restart. \\
-    Unbounded retrieval context &
-      generation/prompt\_builder.py:132 & High & --- & \textsc{p+m} &
-      Retrieved chunks packed with no token budget; truncates the
-      preamble and inflates per-call cost. \\
-    Server-side request forgery in loader &
-      ingestion/loader.py:37 & High & 918 & \textsc{p+m} &
-      Document fetch accepts arbitrary URLs, including link-local
-      metadata endpoints and localhost services. \\
-    SQL injection in metadata filter &
-      retrieval/vector\_store.py:96 & High & 89 & \textsc{p+m} &
-      Caller-supplied filter interpolated into the candidate pre-filter
-      query. \\
-    Unauthenticated administrative re-index &
-      api/routes.py:210 & High & 862 & \textsc{p} &
-      Index-rebuild route registered without the admin auth dependency;
-      any client can trigger a multi-minute rebuild. \\
-    Hard-coded provider credential &
-      core/config.py:14 & Crit. & 798 & \textsc{p} &
-      Provider key stored as a source literal. \\
-    Citation--context mismatch in guardrail &
-      generation/guardrails.py:118 & Med. & --- & \textsc{m} &
-      Citations validated by document id only, not by the span actually
-      placed in the prompt. \\
-    \bottomrule
-  \end{tabularx}
+ \centering
+ \caption{Representative critical- and high-severity findings from the
+ \textit{Vellum} audit.
+ \textsc{p}~=~pattern rule, \textsc{m}~=~on-device model,
+ \textsc{p+m}~=~corroborated.}
+ \label{tab:findings}
+ \renewcommand{\arraystretch}{1.25}
+ \small
+ \begin{tabularx}{\textwidth}{@{}
+ >{\raggedright\arraybackslash}p{0.135\textwidth}
+ >{\ttfamily\scriptsize\raggedright\arraybackslash}p{0.205\textwidth}
+ c c c
+ >{\raggedright\arraybackslash}X @{}}
+ \toprule
+ \textbf{Finding} & \normalfont\textbf{Location} & \textbf{Sev.} &
+ \textbf{CWE} & \textbf{Src.} & \textbf{Summary} \\
+ \midrule
+ Prompt injection via unsanitised query &
+ generation/prompt\_builder.py:88 & Crit. & 77 & \textsc{p+m} &
+ Raw user query concatenated into the system prompt; can override the
+ guardrail preamble and exfiltrate retrieved context. \\
+ Unsafe deserialisation of embedding cache &
+ embeddings/cache.py:52 & Crit. & 502 & \textsc{p} &
+ \texttt{pickle.load} on a configuration-controlled path; write
+ access to the cache directory yields code execution on restart. \\
+ Unbounded retrieval context &
+ generation/prompt\_builder.py:132 & High & n/a & \textsc{p+m} &
+ Retrieved chunks packed with no token budget; truncates the
+ preamble and inflates per-call cost. \\
+ Server-side request forgery in loader &
+ ingestion/loader.py:37 & High & 918 & \textsc{p+m} &
+ Document fetch accepts arbitrary URLs, including link-local
+ metadata endpoints and localhost services. \\
+ SQL injection in metadata filter &
+ retrieval/vector\_store.py:96 & High & 89 & \textsc{p+m} &
+ Caller-supplied filter interpolated into the candidate pre-filter
+ query. \\
+ Unauthenticated administrative re-index &
+ api/routes.py:210 & High & 862 & \textsc{p} &
+ Index-rebuild route registered without the admin auth dependency;
+ any client can trigger a multi-minute rebuild. \\
+ Hard-coded provider credential &
+ core/config.py:14 & Crit. & 798 & \textsc{p} &
+ Provider key stored as a source literal. \\
+ Citation--context mismatch in guardrail &
+ generation/guardrails.py:118 & Med. & n/a & \textsc{m} &
+ Citations validated by document id only, not by the span actually
+ placed in the prompt. \\
+ \bottomrule
+ \end{tabularx}
 \end{table*}
