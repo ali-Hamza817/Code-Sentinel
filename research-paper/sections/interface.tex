@@ -6,9 +6,7 @@ screens that share one visual system---a single accent colour, a common
 metric-tile and panel component, and an always-visible status strip that
 shows the Docker and local-model state. This section walks through the
 screens a developer meets during a full audit; every figure shows the
-platform analysing the case-study project of \cref{sec:results}, and all
-screen captures are reproduced at full page width so that individual
-findings and controls remain legible.
+platform analysing the case-study project of \cref{sec:results}.
 
 \subsection{Initialisation}
 On launch, \cs\ runs a four-stage readiness check
@@ -17,7 +15,7 @@ local model container, and the model pull itself. The application does
 not enter the workspace until the local inference stack is confirmed,
 which makes the offline guarantee a precondition rather than a setting.
 
-\begin{figure*}[!tbp]
+\begin{figure*}[!tp]
   \centering
   \begin{subfigure}{0.49\textwidth}
     \includegraphics[width=\linewidth]{boot-1}
@@ -32,22 +30,35 @@ which makes the offline guarantee a precondition rather than a setting.
   \label{fig:boot}
 \end{figure*}
 
-\subsection{Dashboard}
+\subsection{Dashboard and Static Analysis}
 The dashboard (\cref{fig:dashboard}) is the audit summary: key-performance
 tiles (file count, total findings, mean complexity, build state), a
-severity-distribution ring, a panel of model-generated insights, and a
-short natural-language security summary. It answers ``how is this
-project doing'' in one view before the developer drills in.
+severity-distribution ring, model-generated insight cards, and a short
+natural-language security summary. The static-analysis screen
+(\cref{fig:static}) is the primary triage surface: a file tree annotated
+with per-file finding counts, the selected source in the centre, and the
+file's fused findings below---each with a severity badge, the originating
+modality, a code excerpt, and a suggested fix.
 
-\begin{figure*}[!tbp]
+\begin{figure*}[!tp]
   \centering
-  \includegraphics[width=\textwidth]{dashboard}
-  \caption{Dashboard---audit summary with severity distribution and
-           model-generated insight cards.}
-  \label{fig:dashboard}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\linewidth]{dashboard}
+    \caption{Dashboard---audit summary}
+    \label{fig:dashboard}
+  \end{subfigure}\hfill
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\linewidth]{static-analysis}
+    \caption{Static analysis---in-context triage}
+    \label{fig:static}
+  \end{subfigure}
+  \caption{The two screens a developer uses most: the dashboard for an
+           overview, and static analysis for per-file triage against the
+           offending source.}
+  \label{fig:dash-static}
 \end{figure*}
 
-\subsection{Repository and Configuration}
+\subsection{Project Intake and Configuration}
 The repository screen (\cref{fig:repo}) registers a project from a Git URL
 or a single source file and lists the workspace ledger with per-project
 violation and complexity counts. The settings screen (\cref{fig:settings})
@@ -55,7 +66,7 @@ exposes the privacy controls (offline mode, no cloud transmission,
 encrypted storage), the Docker sandbox image and limits, the local model
 selection, and the analysis depth and complexity threshold.
 
-\begin{figure*}[!tbp]
+\begin{figure*}[!tp]
   \centering
   \begin{subfigure}{0.49\textwidth}
     \includegraphics[width=\linewidth]{repository}
@@ -72,75 +83,70 @@ selection, and the analysis depth and complexity threshold.
   \label{fig:config}
 \end{figure*}
 
-\subsection{Static Analysis}
-The static-analysis screen (\cref{fig:static}) is the primary triage
-surface. A file tree on the left is annotated with per-file finding
-counts; the centre pane shows the selected source; the lower pane lists
-that file's fused findings, each with a severity badge, the originating
-modality, a code excerpt, and a suggested fix. \Cref{fig:static} shows
-the model and pattern passes agreeing on a prompt-assembly weakness.
-
-\begin{figure*}[!tbp]
-  \centering
-  \includegraphics[width=\textwidth]{static-analysis}
-  \caption{Static analysis---file tree, source view, and per-file fused
-           findings with remediation guidance.}
-  \label{fig:static}
-\end{figure*}
-
-\subsection{AI Review}
+\subsection{AI Review and the Vulnerabilities Register}
 The AI-review screen (\cref{fig:aireview}) is an interactive companion to
 the automated pass: the developer selects a file and asks the local model
-free-form questions about it, or triggers a quick or deep review. All
-exchanges stay on \texttt{127.0.0.1}.
+free-form questions, or triggers a quick or deep review, entirely on
+\texttt{127.0.0.1}. The vulnerabilities screen (\cref{fig:vulns}) is the
+cross-file view of every fused finding, with critical-count,
+model-corroborated-count and total tiles above an expandable audit trail
+that carries the file, line, category, and corroboration marker for each
+entry.
 
-\begin{figure*}[!tbp]
+\begin{figure*}[!tp]
   \centering
-  \includegraphics[width=\textwidth]{ai-review}
-  \caption{AI review---file-scoped conversation with the on-device
-           \mbox{Llama~3.2} model; no request leaves the machine.}
-  \label{fig:aireview}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\linewidth]{ai-review}
+    \caption{AI review---file-scoped local model chat}
+    \label{fig:aireview}
+  \end{subfigure}\hfill
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\linewidth]{vulnerabilities}
+    \caption{Vulnerabilities---project-wide audit trail}
+    \label{fig:vulns}
+  \end{subfigure}
+  \caption{Model-assisted review. Every exchange and every finding stays
+           on the machine.}
+  \label{fig:ai-vulns}
 \end{figure*}
 
-\subsection{Vulnerabilities Register}
-The vulnerabilities screen (\cref{fig:vulns}) is the cross-file view of
-every fused finding: critical-count, model-corroborated-count and total
-tiles above an expandable audit trail. Each row carries the file and line,
-the category, a corroboration marker, and, on expansion, the code context
-and remediation plan.
-
-\begin{figure*}[!tbp]
-  \centering
-  \includegraphics[width=\textwidth]{vulnerabilities}
-  \caption{Vulnerabilities register---project-wide audit trail with
-           severity and corroboration markers.}
-  \label{fig:vulns}
-\end{figure*}
-
-\subsection{Complexity}
+\subsection{Complexity and Risk Scoring}
 The complexity screen (\cref{fig:complexity}) reports mean cyclomatic
 complexity and decision-branch totals, a branching-trend chart, and a
-ranked list of structural hot-spots with a short refactoring note for the
-worst offender.
+ranked list of structural hot-spots. The risk-scoring screen
+(\cref{fig:risk}) renders the \phindex\ as a gauge with its band, the
+three sub-scores of \cref{sec:risk} as labelled bars, and a short
+model-written rationale.
 
-\begin{figure*}[!tbp]
+\begin{figure*}[!tp]
   \centering
-  \includegraphics[width=\textwidth]{complexity}
-  \caption{Complexity---mean cyclomatic complexity, branching trend, and
-           ranked structural hot-spots.}
-  \label{fig:complexity}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\linewidth]{complexity}
+    \caption{Complexity---hot-spots and trend}
+    \label{fig:complexity}
+  \end{subfigure}\hfill
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\linewidth]{risk-scoring}
+    \caption{Risk scoring---\phindex\ and sub-scores}
+    \label{fig:risk}
+  \end{subfigure}
+  \caption{Structural health and the composite score of
+           \cref{eq:sv,eq:sc,eq:sq,eq:h}.}
+  \label{fig:complexity-risk}
 \end{figure*}
 
-\subsection{Dynamic Analysis and Container Insights}
+\subsection{Dynamic Analysis, Container Insights, Build, and Reports}
 The dynamic-analysis screen (\cref{fig:dynamic}) provisions the sandbox
 and reports image build time, cold-start latency, live CPU, and memory
-allocation, with the raw Docker engine log. The container-insights screen
+allocation, with the raw Docker engine log; the container-insights screen
 (\cref{fig:container}) overlays the static severity distribution and
-top-vulnerable-file ranking with live telemetry when the sandbox is
-running; the build-and-CI screen (\cref{fig:buildci}) runs the project's
-build and test pipeline and streams its console.
+top-vulnerable-file ranking with live telemetry while the sandbox runs.
+The build-and-CI screen (\cref{fig:buildci}) runs the project's build and
+test pipeline and streams its console, and the reports screen
+(\cref{fig:reports}) assembles the archival summary and finding ledger and
+exports a paginated PDF or machine-readable JSON to local disk.
 
-\begin{figure*}[!tbp]
+\begin{figure*}[!tp]
   \centering
   \begin{subfigure}{0.49\textwidth}
     \includegraphics[width=\linewidth]{dynamic-analysis}
@@ -149,15 +155,14 @@ build and test pipeline and streams its console.
   \end{subfigure}\hfill
   \begin{subfigure}{0.49\textwidth}
     \includegraphics[width=\linewidth]{container-insights}
-    \caption{Container insights---severity mix and hotspots}
+    \caption{Container insights---severity mix and hot-spots}
     \label{fig:container}
   \end{subfigure}
-  \caption{Runtime views. Build time, cold-start latency, and resource
-           use are recorded from the resource-limited sandbox.}
+  \caption{Runtime views from the resource-limited sandbox.}
   \label{fig:runtime}
 \end{figure*}
 
-\begin{figure*}[!tbp]
+\begin{figure*}[!tp]
   \centering
   \begin{subfigure}{0.49\textwidth}
     \includegraphics[width=\linewidth]{build-ci}
@@ -169,22 +174,7 @@ build and test pipeline and streams its console.
     \caption{Reports---archival summary and export}
     \label{fig:reports}
   \end{subfigure}
-  \caption{Build orchestration and reporting. Reports export as a
-           paginated PDF or machine-readable JSON, written to local disk.}
+  \caption{Build orchestration and reporting. Reports are written to
+           local disk only.}
   \label{fig:buildreports}
 \end{figure*}
-
-\subsection{Risk Scoring}
-The risk-scoring screen (\cref{fig:risk}) renders the \phindex\ as a gauge
-with its band, the three sub-scores of \cref{sec:risk} as labelled bars,
-and a short model-written rationale.
-
-\begin{figure*}[!tbp]
-  \centering
-  \includegraphics[width=\textwidth]{risk-scoring}
-  \caption{Risk scoring---\phindex\ gauge and the three disclosed
-           sub-scores of \cref{eq:sv,eq:sc,eq:sq}.}
-  \label{fig:risk}
-\end{figure*}
-
-\FloatBarrier

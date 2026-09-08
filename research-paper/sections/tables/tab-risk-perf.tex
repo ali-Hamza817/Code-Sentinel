@@ -1,0 +1,49 @@
+\begin{table*}[!tp]
+  \centering
+  \begin{minipage}[t]{0.47\textwidth}
+    \centering
+    \caption{\phindex\ computation for the case study
+             (\cref{eq:sv,eq:sc,eq:sq,eq:h}).}
+    \label{tab:risk}
+    \renewcommand{\arraystretch}{1.25}
+    \small
+    \begin{tabularx}{\linewidth}{@{}X c c c@{}}
+      \toprule
+      \textbf{Component} & \textbf{Input} & \textbf{Sub-score}
+        & \textbf{Weight} \\
+      \midrule
+      Vulnerability ($s_v$)    & $n_{\text{sev}} = 6$   & 40 & 0.5 \\
+      Complexity ($s_c$)       & $\overline{CC} = 7.8$  & 61 & 0.3 \\
+      Analysis quality ($s_q$) & audit complete         & 95 & 0.2 \\
+      \midrule
+      \multicolumn{3}{@{}l}{\textbf{\phindex\ $H$}}
+        & \textbf{57 (mod.)} \\
+      \bottomrule
+    \end{tabularx}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.47\textwidth}
+    \centering
+    \caption{Dynamic-pass and end-to-end measurements
+             (mean over $R=10$ runs).}
+    \label{tab:perf}
+    \renewcommand{\arraystretch}{1.2}
+    \small
+    \begin{tabularx}{\linewidth}{@{}X l@{}}
+      \toprule
+      \textbf{Measurement} & \textbf{Value} \\
+      \midrule
+      Image build time                     & $18.4$\,s \\
+      Container cold-start latency          & $0.94$\,s \\
+      Steady-state resident memory          & $241$/$628$\,MiB \\
+      Steady-state CPU                      & $\approx 6\%$ \\
+      \midrule
+      Tree walk $+$ pattern $+$ complexity  & $2.3$\,s \\
+      Model pass (47 files, aggregate)      & $174$\,s \\
+      Dynamic pass                          & $19.3$\,s \\
+      \textbf{End-to-end audit} ($T_{\text{audit}}$)
+        & $\mathbf{196 \pm 11}$\,\textbf{s} \\
+      \textbf{Outbound network requests}    & $\mathbf{0}$ \\
+      \bottomrule
+    \end{tabularx}
+  \end{minipage}
+\end{table*}

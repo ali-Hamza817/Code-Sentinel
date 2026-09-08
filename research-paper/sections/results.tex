@@ -23,8 +23,7 @@ Every timing and agreement metric is computed over $R=10$ repetitions;
 we report the mean and, where noted, the standard deviation or the
 $95$\textsuperscript{th} percentile.
 
-\input{sections/tables/tab-subject}
-\input{sections/tables/tab-setup}
+\input{sections/tables/tab-subject-setup}
 
 \subsection{Findings and Modality Contribution}
 A full audit surfaced $20$ fused findings. \Cref{tab:severity} breaks
@@ -32,7 +31,7 @@ them down by severity and category and \cref{tab:findings} lists a
 representative subset with location, identifier, and originating
 modality.
 
-\input{sections/tables/tab-severity}
+\input{sections/tables/tab-severity-hotspots}
 \input{sections/tables/tab-findings}
 
 Normalising by size gives a detection density
@@ -65,7 +64,7 @@ and the disagreements are where each contributes uniquely---the model on
 a citation-integrity weakness no syntactic rule encodes, the rules on an
 unsafe-deserialisation call the model under-weighted.
 
-\input{sections/tables/tab-agreement}
+\input{sections/tables/tab-agreement-determinism}
 
 \subsection{Structural Hot-Spots}
 The complexity engine flagged five functions above the default budget
@@ -73,9 +72,7 @@ The complexity engine flagged five functions above the default budget
 $CC=26$. Mean cyclomatic complexity across the project is
 $\overline{CC}=7.8$ over $214$ decision points---healthy on average, with
 risk concentrated in a small number of methods, which is the signal the
-ranking is meant to expose.
-
-\input{sections/tables/tab-hotspots}
+ranking is meant to expose (\cref{tab:hotspots}).
 
 \subsection{On-Device Model Pass: Latency}
 \label{sec:eval-latency}
@@ -129,13 +126,11 @@ project therefore reproduces the same result up to occasional
 rewording of a description, which matters for using the \phindex\ as a
 regression gate.
 
-\input{sections/tables/tab-determinism}
-
 \subsection{Composite Risk and Its Sensitivity}
 Substituting the case-study values into
 \cref{eq:sv,eq:sc,eq:sq,eq:h} with $n_{\text{sev}}=6$,
-$\overline{CC}=7.8$, and $a=1$ gives $s_v = 40$, $s_c = 61$, $s_q = 95$,
-and
+$\overline{CC}=7.8$, and $a=1$ gives $s_v = 40$, $s_c = 61$, $s_q = 95$
+(\cref{tab:risk}), and
 \[
   H = \operatorname{round}(0.5{\cdot}40 + 0.3{\cdot}61 + 0.2{\cdot}95)
     = \operatorname{round}(57.3) = 57,
@@ -160,9 +155,7 @@ $\overline{CC}$, and \cref{fig:evalplots} (right) plots the case-study
 slice with the band boundaries.
 
 \input{sections/tables/tab-sensitivity}
-
 \input{figures/diagrams/fig-evalplots}
-\FloatBarrier
 
 \subsection{Runtime Behaviour}
 \Cref{tab:perf} reports the dynamic pass in full: the image builds in
@@ -170,7 +163,7 @@ $18.4$\,s and the container reaches a healthy state in under a second;
 steady-state resident memory is $241$\,MiB of a $628$\,MiB limit at
 $\approx 6\%$ CPU while serving the built-in evaluation load.
 
-\input{sections/tables/tab-perf}
+\input{sections/tables/tab-risk-perf}
 
 \subsection{Positioning}
 \Cref{tab:compare} places \cs\ against representative points in the tool

@@ -1,0 +1,44 @@
+\begin{table*}[!tp]
+  \centering
+  \begin{minipage}[t]{0.47\textwidth}
+    \centering
+    \caption{Pattern vs.\ model agreement over $48$
+             $(\textit{file},\textit{category})$ items ($24$ finding
+             neighbourhoods $+$ $24$ matched controls). Cohen's
+             $\kappa = 0.73$ (\cref{eq:kappa}).}
+    \label{tab:agreement}
+    \renewcommand{\arraystretch}{1.25}
+    \small
+    \begin{tabular}{@{}l c c c@{}}
+      \toprule
+       & \multicolumn{2}{c}{\textbf{Model pass}} & \\
+      \cmidrule(lr){2-3}
+      \textbf{Pattern pass} & present & absent & \textbf{total} \\
+      \midrule
+      present        & 10 & \phantom{0}2 & 12 \\
+      absent         & \phantom{0}3 & 33 & 36 \\
+      \midrule
+      \textbf{total} & 13 & 35 & 48 \\
+      \bottomrule
+    \end{tabular}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.47\textwidth}
+    \centering
+    \caption{Output determinism of the model pass over $K=10$
+             fixed-seed re-runs per file.}
+    \label{tab:determinism}
+    \renewcommand{\arraystretch}{1.25}
+    \small
+    \begin{tabularx}{\linewidth}{@{}X c@{}}
+      \toprule
+      \textbf{Measure} & \textbf{Value} \\
+      \midrule
+      Mean pairwise Jaccard of finding sets,
+        $\bar{J}$ (\cref{eq:jaccard})              & $0.94$ \\
+      Finding-count coefficient of variation        & $0.03$ \\
+      Files with an identical finding set (all runs) & $41 / 47$ \\
+      Largest single-file finding-count range        & $\pm 1$ \\
+      \bottomrule
+    \end{tabularx}
+  \end{minipage}
+\end{table*}

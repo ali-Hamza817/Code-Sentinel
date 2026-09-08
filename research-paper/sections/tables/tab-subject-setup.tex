@@ -1,0 +1,53 @@
+\begin{table*}[!tp]
+  \centering
+  \begin{minipage}[t]{0.47\textwidth}
+    \centering
+    \caption{Case-study subject: \textit{Vellum}, a
+             retrieval-augmented generation service.}
+    \label{tab:subject}
+    \renewcommand{\arraystretch}{1.15}
+    \small
+    \begin{tabularx}{\linewidth}{@{}l X@{}}
+      \toprule
+      \textbf{Attribute} & \textbf{Value} \\
+      \midrule
+      Language              & Python \\
+      Source files          & 47 \\
+      Lines of code         & ${\sim}5{,}200$ \\
+      Mean cyclomatic compl.\ ($\overline{CC}$) & 7.8 \\
+      Decision points       & 214 \\
+      Modules               & \texttt{api}, \texttt{ingestion},
+                              \texttt{embeddings}, \texttt{retrieval},
+                              \texttt{generation}, \texttt{eval},
+                              \texttt{core}, \texttt{tests} \\
+      Build/test            & \texttt{ruff} + \texttt{mypy} +
+                              \texttt{pytest} (142 tests, 84\% coverage) \\
+      \bottomrule
+    \end{tabularx}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.47\textwidth}
+    \centering
+    \caption{Experimental setup.}
+    \label{tab:setup}
+    \renewcommand{\arraystretch}{1.15}
+    \small
+    \begin{tabularx}{\linewidth}{@{}l X@{}}
+      \toprule
+      \textbf{Component} & \textbf{Configuration} \\
+      \midrule
+      Machine   & 8-core x86-64 laptop CPU, 16\,GB RAM, integrated
+                  graphics (no CUDA) \\
+      Host      & Windows 10, Docker via WSL2 \\
+      Model     & \mbox{Llama 3.2} 3B-Instruct, 4-bit (Q4\_K\_M)
+                  quantisation \\
+      Runtime   & Ollama, context $4096$, temperature $0.1$,
+                  top-$p$ $0.9$, fixed seed \\
+      Sandbox   & Docker: $1$ vCPU, $628$\,MiB memory limit \\
+      Analysis  & depth = deep; complexity budget $CC>15$; model window
+                  = first $5000$ chars for large files \\
+      Protocol  & $R=10$ repetitions per timing / agreement metric;
+                  mean $\pm$ s.d.\ or $p_{95}$ reported \\
+      \bottomrule
+    \end{tabularx}
+  \end{minipage}
+\end{table*}

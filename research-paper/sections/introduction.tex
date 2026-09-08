@@ -5,103 +5,87 @@ Keeping source code secure has become a first-order engineering concern,
 and the categories of weakness responsible for real incidents have
 remained remarkably stable for two decades~\cite{owasp2021,mitrecwe}. A
 mature ecosystem of assistive tools exists to help developers find these
-weaknesses before release. Yet the tools that are actually capable---
-whole-program static analysers and, more recently, large language models
-(LLMs) applied to code review---share a set of deployment assumptions
-that are increasingly difficult to accept. We frame this work around four
-such problems.
+weaknesses before release, but the tools that are actually
+capable---whole-program static analysers and, more recently, large
+language models (LLMs) applied to code review---share a set of deployment
+assumptions that are increasingly difficult to accept.
 
-\smallskip
-\noindent\textbf{Problem 1 --- auditing your code means letting a third
-party read it.} The capable static-analysis and code-review services on
-the market run in the cloud. Using them means uploading the
-repository---frequently the organisation's most valuable and most
-sensitive asset---to external infrastructure, where it is transported,
-processed, cached, and in some cases retained. Every such upload creates
-a disclosure path that did not exist before the audit and enlarges the
-set of parties that can be compromised to obtain the code. The tension is
-direct: a step taken to make the software safer produces a copy of it in
-a place the team does not control.
+The first difficulty is that auditing your code, with these tools, means
+letting a third party read it. The capable static-analysis and
+code-review services on the market run in the cloud, so using them means
+uploading the repository---frequently the organisation's most valuable
+and most sensitive asset---to external infrastructure, where it is
+transported, processed, cached, and in some cases retained. Every such
+upload creates a disclosure path that did not exist before the audit and
+enlarges the set of parties that can be compromised to obtain the code.
+The tension is direct: a step taken to make the software safer produces a
+copy of it in a place the team does not control.
 
-\smallskip
-\noindent\textbf{Problem 2 --- many teams are not permitted to send code
-off the machine at all.} Defence, medical-device, financial, and
+The second difficulty is that many teams are not permitted to send code
+off the machine at all. Defence, medical-device, financial, and
 critical-infrastructure software is routinely governed by data-residency
 rules, customer contracts, or export controls that prohibit transmitting
 source outside a controlled boundary, and some development networks have
-no outbound connectivity by design. For these teams the cloud tools of
-Problem~1 are not a trade-off to weigh; they are unusable, and the
-developers who arguably need rigorous auditing most are left with the
-least capable options.
+no outbound connectivity by design. For these teams the cloud tools above
+are not a trade-off to weigh; they are unusable, and the developers who
+arguably need rigorous auditing most are left with the least capable
+options.
 
-\smallskip
-\noindent\textbf{Problem 3 --- LLM analysis through hosted APIs is a
-recurring, usage-scaled cost and a hard vendor dependency.} LLMs trained
-on code give review a form of semantic reasoning that rule engines
+The third difficulty concerns cost and dependency. LLMs trained on code
+give review a form of semantic reasoning that rule engines
 lack~\cite{chen2021codex}, but the models good enough to do it well are
 reached through metered APIs. Running an LLM pass over an entire
 repository on every push---the point at which it is most
 useful---converts security analysis into a per-token line item and
 couples the workflow to one provider's pricing, rate limits, and
-availability. Cost and dependency, not capability, become the limiting
-factors.
+availability. Cost and vendor lock-in, not capability, become the
+limiting factors.
 
-\smallskip
-\noindent\textbf{Problem 4 --- the capability is scattered across
-disconnected tools.} A team that wants pattern detection, a
-structural-health metric, a dynamic check, and an LLM opinion today
-assembles four products with four interfaces and four output formats.
-Findings arrive out of the context of the offending code, there is no
-shared notion of overall risk, and the accumulated friction is enough
-that developers disengage from static analysis
+The fourth difficulty is fragmentation. A team that wants pattern
+detection, a structural-health metric, a dynamic check, and an LLM
+opinion today assembles four products with four interfaces and four
+output formats. Findings arrive out of the context of the offending code,
+there is no shared notion of overall risk, and the accumulated friction
+is enough that developers disengage from static analysis
 altogether~\cite{johnson2013,nachtigall2022}.
 
-\smallskip
-\noindent\textbf{Our solution.} This paper presents \cs, a local-first
-desktop platform that answers all four problems at once by moving the
-entire audit onto the developer's machine. \cs\ combines pattern-based
-static detection, a cyclomatic-complexity engine, an on-device LLM
-reviewer, and a containerised dynamic pass behind a single graphical
-workflow, and folds their output into one transparent \phindex. The LLM
-stage runs a quantised \mbox{Llama~3.2} model inside a local Ollama
+This paper presents \cs, a local-first desktop platform that answers all
+four difficulties at once by moving the entire audit onto the developer's
+machine. \cs\ combines pattern-based static detection, a
+cyclomatic-complexity engine, an on-device LLM reviewer, and a
+containerised dynamic pass behind a single graphical workflow, and folds
+their output into one transparent \phindex. The LLM stage runs a
+quantised \mbox{Llama~3.2} model inside a local Ollama
 container~\cite{ollama,touvron2023llama2}; the dynamic stage builds and
 runs the project in a resource-limited Docker
 sandbox~\cite{merkel2014docker}. No stage of the pipeline opens an
 outbound connection, and the interface displays this property
-explicitly. \cs\ therefore addresses \textbf{Problem~1} because nothing
-leaves the machine, \textbf{Problem~2} because the tool runs unchanged in
-an air-gapped network, \textbf{Problem~3} because local inference has no
-marginal API cost and no provider lock-in, and \textbf{Problem~4} because
-a single tool presents every modality's output, and one composite score,
-next to the source that produced it.
+explicitly. Nothing leaves the machine, so the confidentiality concern is
+removed; the tool runs unchanged in an air-gapped network; local
+inference has no marginal API cost and no provider lock-in; and a single
+tool presents every modality's output, and one composite score, next to
+the source that produced it.
 
-\smallskip
-\noindent\textbf{Contributions.}
-\begin{itemize}
-  \item A \emph{local-first architecture} that co-locates pattern-based
-        SAST, an on-device code-reasoning LLM, a cyclomatic-complexity
-        engine, and a container sandbox in one desktop process behind a
-        hard no-egress boundary (\cref{sec:method}).
-  \item A \emph{finding-fusion and composite-scoring} method that
-        reconciles rule-based and model-based findings and combines them,
-        with structural metrics, into a single \phindex\ with a
-        disclosed closed form (\cref{sec:fusion,sec:risk}).
-  \item A \emph{task-oriented interface} of twelve coordinated screens
-        for configuring an audit, watching it run, and triaging results
-        in the context of the offending code (\cref{sec:interface}).
-  \item An \emph{operational evaluation} on a representative
-        retrieval-augmented-generation service that reports per-file
-        model latency, end-to-end audit time, output determinism,
-        pattern/model agreement, and risk-score sensitivity
-        (\cref{sec:results}).
-\end{itemize}
+The contributions of this work are a local-first architecture that
+co-locates pattern-based static application security testing (SAST), an
+on-device code-reasoning LLM, a cyclomatic-complexity engine, and a
+container sandbox in one desktop process behind a hard no-egress boundary
+(\cref{sec:method}); a finding-fusion and composite-scoring method that
+reconciles rule-based and model-based findings and combines them, with
+structural metrics, into a single \phindex\ with a disclosed closed form
+(\cref{sec:fusion,sec:risk}); a task-oriented interface of twelve
+coordinated screens for configuring an audit, watching it run, and
+triaging results in the context of the offending code
+(\cref{sec:interface}); and an operational evaluation on a representative
+retrieval-augmented-generation service that reports per-file model
+latency, end-to-end audit time, output determinism, pattern/model
+agreement, and risk-score sensitivity (\cref{sec:results}).
 
-\smallskip
-\noindent The remainder of the paper is organised as follows.
-\Cref{sec:related} traces the evolution of static and dynamic analysis,
-software metrics, and language models for code security, and positions
-\cs\ against that history. \Cref{sec:method} presents the architecture,
-the analysis pipeline, and the scoring model. \Cref{sec:interface} walks
-through the product interface. \Cref{sec:results} reports the evaluation.
-\Cref{sec:discussion} discusses trade-offs and threats to validity, and
-\Cref{sec:conclusion} concludes.
+The remainder of the paper traces the evolution of static and dynamic
+analysis, software metrics, and language models for code security and
+positions \cs\ against that history (\cref{sec:related}); presents the
+architecture, the analysis pipeline, and the scoring model
+(\cref{sec:method}); walks through the product interface
+(\cref{sec:interface}); reports the evaluation (\cref{sec:results});
+discusses trade-offs and threats to validity (\cref{sec:discussion}); and
+concludes (\cref{sec:conclusion}).
